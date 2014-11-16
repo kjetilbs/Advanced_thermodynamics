@@ -40,3 +40,8 @@ const global s_ref = convert(Array{Float64,1},componentData[:,5])/1000
 # Note: assumed to be constant. Should be changed for accuracy
 const global c_p = convert(Array{Float64,1},componentData[:,6])/1000
 
+# Cp-values; ideally, these should be integrated analytically 
+# from the DIPPR expressions, and then used as is. As a quick
+# fix, constant values may be assumed - they will not affect 
+# equilibrium calculations themselves anyway
+

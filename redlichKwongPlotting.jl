@@ -16,7 +16,7 @@ for T in 175:5:210
 	f_handle = open(filename, "w")
 	# Testing 
 	# write(f_handle, "Partyhatt! \n")
-	println(redlichKwongParameterA(T,n_vapor))
+	# println(redlichKwongParameterA(T,n_vapor))
 	for V in logspace(log10(1.1*redlichKwongParameterB(n_vapor)),0,100)
 		# Calculate p from RK EOS
 		p = redlichKwongEOS(T,V,n_vapor)

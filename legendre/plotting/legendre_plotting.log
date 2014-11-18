@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.11.12)  16 NOV 2014 17:48
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.11.12)  18 NOV 2014 17:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**plotting/pV_plot.tex
-(./plotting/pV_plot.tex
+**legendre_plotting.tex
+(./legendre_plotting.tex
 LaTeX2e <2014/05/01>
 Babel <3.9k> and hyphenation patterns for 78 languages loaded.
 (/usr/local/texlive/2014/texmf-dist/tex/latex/standalone/standalone.cls
@@ -502,22 +502,22 @@ Package: array 2008/09/09 v2.4c Tabular extension package (FMi)
 \extratabsurround=\skip43
 \backup@length=\skip44
 ))
-No file pV_plot.aux.
-\openout1 = `pV_plot.aux'.
+(./legendre_plotting.aux)
+\openout1 = `legendre_plotting.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 27.
-LaTeX Font Info:    ... okay on input line 27.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 27.
-LaTeX Font Info:    ... okay on input line 27.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 27.
-LaTeX Font Info:    ... okay on input line 27.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 27.
-LaTeX Font Info:    ... okay on input line 27.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 27.
-LaTeX Font Info:    ... okay on input line 27.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 27.
-LaTeX Font Info:    ... okay on input line 27.
-ABD: EveryShipout initializing macros
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 22.
+LaTeX Font Info:    ... okay on input line 22.
+ ABD: EveryShipout initializing macros
 (/usr/local/texlive/2014/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count116
@@ -573,23 +573,34 @@ e
 Package pgfplots notification 'compat/show suggested version=true': document ha
 s been generated with the most recent feature set (\pgfplotsset{compat=1.10}).
 
+PGFPlots: reading {legendre_transform.dat}
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 42.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 42.
+[1
 
-! Package pgfplots Error: sorry, plot file{pVdata_T_170.dat} could not be opene
-d.
+{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+PGFPlots: reading {legendre_original_tn.dat}
 
-See the pgfplots package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.47 ...or=green, smooth] file {pVdata_T_170.dat};
-                                                   
+[2] (./legendre_plotting.aux) ) 
 Here is how much of TeX's memory you used:
- 21448 strings out of 493117
- 563067 string characters out of 6135432
- 678897 words of memory out of 5000000
- 24569 multiletter control sequences out of 15000+600000
+ 21668 strings out of 493117
+ 568981 string characters out of 6135432
+ 736754 words of memory out of 5000000
+ 24784 multiletter control sequences out of 15000+600000
  3640 words of font info for 14 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 62i,2n,83p,743b,1224s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 62i,18n,83p,744b,2002s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2014/texmf-dist/fonts/type1/
+public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/pub
+lic/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmsy10.pfb>
+Output written on legendre_plotting.pdf (2 pages, 43123 bytes).
+PDF statistics:
+ 30 PDF objects out of 1000 (max. 8388607)
+ 21 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 13 words of extra memory for PDF output out of 10000 (max. 10000000)
 
-!  ==> Fatal error occurred, no output PDF file produced!

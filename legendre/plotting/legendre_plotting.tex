@@ -1,0 +1,65 @@
+\documentclass[tikz,border=10mm]{standalone}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepgfplotslibrary{patchplots}
+\usepackage{pgfplotstable}
+
+% \pgfplotsset{compat=1.3}
+
+% \usepgfplotslibrary{external} 
+% \tikzexternalize
+
+\pgfplotsset{compat=newest}
+
+% For generating .pdf
+% \usetikzlibrary{external}
+% \tikzexternalize
+
+% Forcing remake of the .pdfs; otherwise, LaTeX will assume that nothing has changed
+% \tikzset{external/force remake}
+
+\begin{document}
+\thispagestyle{empty}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Illustration of the Legendre transform},
+        ylabel={$y$},
+        xlabel={$x$},
+        legend entries={$y(x)= x^2 + 2$},
+        grid = major,
+        % scaled y ticks = true,
+        % ymin=0,
+        ymax=50,
+        % xmin=1e-3,
+        % xmax=1,
+        % restrict y to domain=-1e7:1e7,
+        %domain=-10:10
+        ]
+        \addplot[color=red, smooth, very thin] file {legendre_transform.dat};
+        % \addplot[color=black, smooth, thick] file {function_values.dat};
+    \end{axis}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        title={Illustration of the Legendre transform},
+        ylabel={$\psi$},
+        xlabel={$\xi$},
+        legend entries={$\psi(\xi)= -\frac{1}{4}\xi^2 + 2$},
+        grid = major,
+        % scaled y ticks = true,
+        % ymin=0,
+        ymax=50,
+        % xmin=1e-3,
+        % xmax=1,
+        % restrict y to domain=-1e7:1e7,
+        %domain=-10:10
+        ]
+        % \addplot[color=black, smooth, very thin] file {legendre_transform_fn.dat};
+        \addplot[color=blue, smooth, thick] file {legendre_original_tn.dat};
+    \end{axis}
+\end{tikzpicture}
+
+\end{document}

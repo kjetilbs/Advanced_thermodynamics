@@ -15,6 +15,12 @@
 # Universal gas constant [J/K mol]
 const global R = 8.3145
 
+# Reference temperature [K]
+const global T_ref = 298.15
+
+# Reference pressure [Pa]
+const global p_ref = 1e5
+
 # Redlich-Kwong constant a [J^2 K^0.5/mol^2 Pa]
 const global a_RK = (1/(9*((2^(1/3))-1)))*((R^2*tc.^(5/2))./pc)
 

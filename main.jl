@@ -67,7 +67,9 @@ include("redlichKwong.jl")
 
 # # p = redlichKwongEOS(T,V,n_feed)
 
-include("redlichKwongPlotting.jl")
+# include("redlichKwongPlotting.jl")
+include("idealGas.jl")
+include("idealGasFunctions.jl")
 
 
 

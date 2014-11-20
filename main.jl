@@ -15,11 +15,11 @@
 # Clear all variables
 workspace()
 
-# Reading component data
-include("readComponentData.jl")
+# # Reading component data
+# include("readComponentData.jl")
 
-# Defining constants
-include("defineConstants.jl")
+# # Defining constants
+# include("defineConstants.jl")
 
 # # Initialization of the parameters
 # n_feed = [1 0 0 0 0]
@@ -60,7 +60,7 @@ n_liquid = n_feed - n_vapor
 # println(n_feed)
 
 # # Redlich-Kwong functions
-include("redlichKwong.jl")
+# include("redlichKwong.jl")
 
 # # T = 298.15
 # # V = 0.1
@@ -68,8 +68,23 @@ include("redlichKwong.jl")
 # # p = redlichKwongEOS(T,V,n_feed)
 
 # include("redlichKwongPlotting.jl")
-include("idealGas.jl")
+# include("idealGas.jl")
+
+# Importing ideal gas module
 include("idealGasFunctions.jl")
+importall idealGas
+println("Contents of ideal gas module:")
+whos(idealGas)
+println("\n")
+
+# Importing Redlich-Kwong module
+include("redlichKwong.jl")
+importall redlichKwong
+println("Contents of Redlich-Kwong module:")
+whos(redlichKwong)
+
+# println(idealHessian(298.15,0.1,n_vapor))
+# println(idealGasEOS(298.15,0.1,n_vapor))
 
 
 

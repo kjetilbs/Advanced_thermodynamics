@@ -8,6 +8,48 @@
 #############################################################
 
 #############################################################
+# Thermodynamic functions using Redlich-Kwong
+#
+# Functions for calculating thermodynamic potentials, 
+# properties and useful derivatives using Redlich-Kwong EOS: 
+#
+#	- idealGasH: enthalpy for an ideal gas
+#	- idealGasS: entropy for an ideal gas
+#	- idealGasMu: chemical potential for an ideal gas
+#	- idealGasA: Helmholtz free energy for an ideal gas
+#
+# Derivatives of Helmholtz free energy using ideal gas:
+#	- Aig_T: 	$\pdc{A\ig}{T}{V,\vt{n}} = - S\ig$ 
+#	- Aig_V: 	$\pdc{A\ig}{V}{T,\vt{n}} = - p\ig$
+#	- Aig_n: 	$\pdc{A\ig}{\vt{n}}{T,V} = \mu\ig$
+#	- Aig_TT:	$\pddc{A\ig}{T}{T}{V,\vt{n}}$ 
+#	- Aig_TV:	$\pddc{A\ig}{T}{V}{\vt{n}}$ 
+#	- Aig_Tn:	$\pddc{A\ig}{T}{\vt{n}}{V}$
+#	- Aig_VV:	$\pddc{A\ig}{V}{V}{T,\vt{n}}$
+#	- Aig_nV:	$\pddc{A\ig}{\vt{n}}{V}{T}$
+#	- Aig_nn:	$\pddc{A\ig}{\vt{n}}{\vt{n}}{T,V}$
+#
+# Resulting Hessian matrix based on Helmholtz free energy
+# for ideal gas with constant temperature $T$: 
+# 	- idealGasHessian 
+#
+# Author: 	Kjetil Sonerud
+# Updated:	2014-11-20 11:28:33
+#############################################################
+
+module redlichKwong
+
+# Functions to be available in global scope once the module is
+# imported/being used
+export redlichKwongEOS							#rkHessian
+
+# Reading component data
+include("readComponentData.jl")
+
+# Defining constants
+include("defineConstants.jl")
+
+#############################################################
 # Redlich-Kwong EOS
 #############################################################
 function redlichKwongParameterA(T,n)
@@ -42,4 +84,9 @@ function redlichKwongEOS(T,V,n)
 
 	# Calculating the pressure
 	p = (sum(n)*R*T)/(V-B) - (A/(V*(V+B)))
+end
+
+#############################################################
+# End module
+#############################################################
 end

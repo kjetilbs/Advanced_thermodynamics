@@ -18,8 +18,8 @@ workspace()
 # # Reading component data
 # include("readComponentData.jl")
 
-# # Defining constants
-# include("defineConstants.jl")
+# Defining constants
+include("defineConstants.jl")
 
 # # Initialization of the parameters
 # n_feed = [1 0 0 0 0]

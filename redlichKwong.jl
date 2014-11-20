@@ -14,8 +14,9 @@
 #	- residualS:		Residual entropy
 #	- residualMu:		Residual chemical potential
 #
-# Derivatives of Helmholtz free energy using ideal gas:
-#	- Aig_T: 			$\pdc{A\ig}{T}{V,\vt{n}} = - S\ig$ 
+# Derivatives of residual Helmholtz free energy:
+#	- residualA_V: 		$\pdc{A\rrk}{V}{T,\vt{n}} \eqdef - (p\rk - p\ig)$ 
+
 #	- Aig_V: 			$\pdc{A\ig}{V}{T,\vt{n}} = - p\ig$
 #	- Aig_n: 			$\pdc{A\ig}{\vt{n}}{T,V} = \mu\ig$
 #	- Aig_TT:			$\pddc{A\ig}{T}{T}{V,\vt{n}}$ 
@@ -37,7 +38,7 @@ module redlichKwong
 
 # Functions to be available in global scope once the module is
 # imported/being used
-export redlichKwongP, residualA							#rkHessian
+export redlichKwongP, residualA, enthalpy			#rkHessian
 
 # Defining constants and reading component data. Needs to be 
 # included within the module scope
@@ -58,7 +59,7 @@ function redlichKwongA(T,n)
 	# $A(T,\vt{n}) = \frac{1}{T^{1/2}}\vtt{n}(\vt{a}\:\vtt{a})\vt{n}$
 	# where a is defined in defineConstants.jl as 
 	# $a_i = \frac{1}{9(2^{1/3}-1)}\frac{R^2T_{c,i}^{5/2}}{p_{c,i}} = \Omega_a \frac{R^2T_{c,i}^{5/2}}{p_{c,i}}$
-	A = dot(n,(((sqrt(a_RK)*sqrt(a_RK)')*n)/sqrt(T)))
+	A = dot(n,((sqrt(a_RK)*sqrt(a_RK)')*n)/sqrt(T))
 end
 
 function redlichKwongB(n)
@@ -73,11 +74,10 @@ function redlichKwongP(T,V,n)
 	# Calculate the pressure from the Redlich-Kwong EOS:
 	# $p\rk = (T,V,\vt{n}) = \frac{NRT}{V-B} - \frac{A}{V(V+B)}$
 	
-	# Calculating A and B parameters
+	# Calculating $A$ and $B$ parameters
 	A = redlichKwongA(T,n)
 	B = redlichKwongB(n)
 
-	# Calculating the pressure
 	p = (sum(n)*R*T)/(V-B) - (A/(V*(V+B)))
 end
 
@@ -88,12 +88,84 @@ function residualA(T,V,n)
 	# Calculate the residual Helmholtz free energy using the
 	# R-K EOS
 	# $A\rrk(T,V,\vt{n}) = NRT\ln \left(\frac{V}{V-B}\right)+\frac{A}{B}\ln \left(\frac{V}{V+B}\right)$
-	# Calculating A and B parameters
-	A = redlichKwongParameterA(T,n)
-	B = redlichKwongParameterB(n)
+	
+	# Calculating $A$ and $B$ parameters
+	A = redlichKwongA(T,n)
+	B = redlichKwongB(n)
 
-	helm = sum(n)*R*T*log(V/(V-B)) + (A/B)*log(V/(V+B))
+	resA = sum(n)*R*T*log(V/(V-B)) + (A/B)*log(V/(V+B))
 end
+
+function residualS(T,V,n)
+	# Calculate the residual entropy using the R-K EOS
+	# $S\rrk(T,V,\vt{n}) = -\pdc{A\rrk}{T}{V,\vt{n}} = -NR\ln \left(\frac{V}{V-B}\right)+\frac{A}{2BT}\ln \left(\frac{V}{V+B}\right)$
+	
+	# Calculating $A$ and $B$ parameters
+	A = redlichKwongA(T,n)
+	B = redlichKwongB(n)
+
+	resS = -sum(n)*R*log(V/(V-B)) - (A/(2*B*T))*log(V/(V+B))
+end
+
+function residualMu(T,V,n)
+	# Calculate the residual chemical potential using the 
+	# R-K EOS
+	# $\mu\rrk\tvn = \pdc{A\rrk}{\vt{n}}{\tvni} = \vt{e}RT\ln \left(\frac{V}{V-B}\right) + NRT \left(\frac{B_{\vt{n}}}{V-B}\right) + \left(\frac{\Adn B - \Bdn A}{B^2}\right)\ln \left(\frac{V}{V+B}\right) - \frac{A}{B}\frac{\Bdn}{V+B}$
+	# where
+	# $\Adn &\meqdef \pdc{A}{\vt{n}}{\tvni} = \frac{2}{T^{1/2}}(\vt{a}\:\vtt{a})\vt{n}$
+	# $\Bdn &\meqdef \pdc{B}{\vt{n}}{\tvni} = \vt{b}$
+
+	# Calculating $A$ and $B$ parameters
+	A = redlichKwongA(T,n)
+	B = redlichKwongB(n)
+
+	# Calculating $\Adn$ and $\Bdn$ parameters
+	A_n = 2*((sqrt(a_RK)*sqrt(a_RK)')*n)/sqrt(T)
+	B_n = b_RK
+
+	resMu = ones(length(n))*R*T*log(V/(V-B)) + sum(n)*R*T*(B_n/(V-B)) + ((A_n*B - B_n*A)/(B^2))*log(V/(V+B)) - (A/B)*(B_n/(V+B))
+end
+
+#############################################################
+# Thermodynamic potentials using Redlich-Kwong EOS:
+# combining the residual potential and the ideal gas potential
+#############################################################
+function helmholtz(T,V,n)
+	# Calculate the Helmholtz free energy using the R-K EOS
+	# $A\rk(T,V,\vt{n}) = A\rrk(T,V,\vt{n}) + A\ig(T,V,\vt{n})$
+	rkA = residualA(T,V,n) + idealA(T,V,n)
+end
+
+function entropy(T,V,n)
+	# Calculate the entropy using the R-K EOS
+	# $S\rk(T,V,\vt{n}) = S\rrk(T,V,\vt{n}) + S\ig(T,V,\vt{n})$
+	rkS = residualS(T,V,n) + dot(n,idealS(T,V,n))
+end
+
+function chemicalPotential(T,V,n)
+	# Calculate the entropy using the R-K EOS
+	# $\mu\rk(T,V,\vt{n}) = \mu\rrk(T,V,\vt{n}) + \mu\ig(T,V,\vt{n})$
+	rkMu = residualMu(T,V,n) + idealMu(T,V,n)
+end
+
+function enthalpy(T,V,n)
+	# Calculate the enthalpy using the R-K EOS from
+	# $H\rk(T,V,\vt{n}) = A\rk(T,V,\vt{n}) + TS\rk(T,V,\vt{n}) + p\rk(T,V,\vt{n})V$
+	rkH = helmholtz(T,V,n) + T*entropy(T,V,n) + redlichKwongP(T,V,n)*V
+end
+
+#############################################################
+# First derivatives of residual Helmholtz free energy using 
+# Redlich-Kwong EOS
+#############################################################
+function residualA_V(T,V,n)
+	# Calculate the first derivative of residual Helmholtz 
+	# free energy with respect to volume
+	# $\pdc{A\rrk}{V}{T,\vt{n}} \eqdef - (p\rk - p\ig)$
+	resA_V = -(redlichKwongP(T,V,b) - idealP(T,V,n))
+end
+
+
 
 #############################################################
 # End module

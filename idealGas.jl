@@ -34,7 +34,7 @@ module idealGas
 
 # Functions to be available in global scope once the module is
 # imported/being used
-export idealHessian
+export idealP, idealS, idealMu, idealA, idealHessian
 
 # Defining constants and reading component data. Needs to be 
 # included within the module scope
@@ -67,16 +67,16 @@ end
 function idealMu(T,V,n)
 	# Calculate the chemical potential of an ideal gas 
 	# $\mathrm{\mu}\ig(T,V,\vt{n}) = \vt{h}\ig - T\vt{s}\ig$
-	h 	= idealGasH(T)
-	s 	= idealGasS(T,V,n)
+	h 	= idealH(T)
+	s 	= idealS(T,V,n)
 	mu	= h - T*s 
 end
 
 function idealA(T,V,n)
 	# Calculate the Helmholtz free energy of an ideal gas 
 	# $A(T,V,\vt{n}) = -pV + \sum_{i=1}^n \! \mu_i N_i$
-	mu	= idealGasMu(T,V,n)
-	p	= idealGasEOS(T,V,n)
+	mu	= idealMu(T,V,n)
+	p	= idealP(T,V,n)
 	A 	= -p*V + dot(mu,n)
 end
 
@@ -88,7 +88,7 @@ function Aig_T(T,V,n)
 	# Calculate the derivative of Helmholtz free energy of 
 	# an ideal gas with respect to temperature
 	# $\pdc{A\ig}{T}{V,\vt{n}} = - S\ig$
-	s 	= idealGasS(T,V,n) 
+	s 	= idealS(T,V,n) 
 	A_T = -dot(n,s)
 end
 
@@ -96,14 +96,14 @@ function Aig_V(T,V,n)
 	# Calculate the derivative of Helmholtz free energy of 
 	# an ideal gas with respect to volume
 	# $\pdc{A\ig}{V}{T,\vt{n}} = - p\ig$
-	A_T = -idealGasEOS(T,V,n)
+	A_T = -idealP(T,V,n)
 end
 
 function Aig_n(T,V,n)
 	# Calculate the derivative of Helmholtz free energy of 
 	# an ideal gas with respect to mole vector
 	# $\pdc{A\ig}{\vt{n}}{T,V} = \vt{\mu}\ig$
-	A_n = idealGasMu(T,V,n)
+	A_n = idealMu(T,V,n)
 end
 
 #############################################################
@@ -130,7 +130,7 @@ function Aig_Tn(T,V,n)
 	# Calculate the second derivative of Helmholtz free energy 
 	# of an ideal gas with respect to temperature and mole vector
 	# $\pddc{A\ig}{T}{\vt{n}}{V} = - \vt{s}\ig + R$
-	A_TV = -idealGasS(T,V,n) + R*ones(length(n))
+	A_TV = -idealS(T,V,n) + R*ones(length(n))
 end
 
 function Aig_VV(T,V,n)

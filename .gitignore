@@ -1,0 +1,7 @@
+# Folders not to be included
+sandbox/
+
+# .tex-related files not to be included
+*.aux
+*.fdb_latexmk
+*.log

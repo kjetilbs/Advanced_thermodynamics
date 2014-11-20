@@ -126,6 +126,6 @@ function Aig_nn(T,V,n)
 	# Calculate the second derivative of Helmholtz free energy 
 	# of an ideal gas with respect to mole vector
 	# $\pddc{A\ig}{\vt{n}}{\vtt{n}}{T,V} = -RT(\mathrm{diag}(\vt{n}))^{-1}$
-	A_nn = -R*T*(inv(diagm(n)))
+	A_nn = -R*T*(diagm(1./n))
 end
 

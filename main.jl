@@ -70,16 +70,16 @@ n_liquid = n_feed - n_vapor
 # include("redlichKwongPlotting.jl")
 # include("idealGas.jl")
 
-# Importing ideal gas module
-include("idealGasFunctions.jl")
-importall idealGas
+# Using ideal gas module
+include("idealGas.jl")
+using idealGas
 println("Contents of ideal gas module:")
 whos(idealGas)
 println("\n")
 
-# Importing Redlich-Kwong module
+# Using Redlich-Kwong module
 include("redlichKwong.jl")
-importall redlichKwong
+using redlichKwong
 println("Contents of Redlich-Kwong module:")
 whos(redlichKwong)
 

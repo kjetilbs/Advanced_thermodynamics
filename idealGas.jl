@@ -1,12 +1,15 @@
 #############################################################
 # Thermodynamic functions using ideal gas
 #
+# Ideal gas equation of state:
+#	- idealP:	pressure from the ideal gas law
+#
 # Functions for calculating thermodynamic potentials, 
 # properties and useful derivatives using ideal gas EOS: 
-#	- idealGasH: enthalpy for an ideal gas
-#	- idealGasS: entropy for an ideal gas
-#	- idealGasMu: chemical potential for an ideal gas
-#	- idealGasA: Helmholtz free energy for an ideal gas
+#	- idealH: 	enthalpy for an ideal gas
+#	- idealS: 	entropy for an ideal gas
+#	- idealMu: 	chemical potential for an ideal gas
+#	- idealA: 	Helmholtz free energy for an ideal gas
 #
 # Derivatives of Helmholtz free energy using ideal gas:
 #	- Aig_T: 	$\pdc{A\ig}{T}{V,\vt{n}} = - S\ig$ 
@@ -21,7 +24,7 @@
 #
 # Resulting Hessian matrix based on Helmholtz free energy
 # for ideal gas with constant temperature $T$: 
-# 	- hessian 
+# 	- idealHessian 
 #
 # Author: 	Kjetil Sonerud
 # Updated:	2014-11-19 17:08:35
@@ -33,37 +36,35 @@ module idealGas
 # imported/being used
 export idealHessian
 
-# Reading component data
-include("readComponentData.jl")
-
-# Defining constants
+# Defining constants and reading component data. Needs to be 
+# included within the module scope
 include("defineConstants.jl")
 
 #############################################################
 # Ideal gas EOS
 #############################################################
-function idealGasEOS(T,V,n)
+function idealP(T,V,n)
 	# Calculate the pressure from the ideal gas EOS:
-	# 	p_ig(T,V,n) = NRT/V
+	# $p\ig(T,V,\vt{n}) = \frac{NRT}{V}$
 	p = (sum(n)*R*T)/V
 end
 
 #############################################################
 # Thermodynamic potentials using ideal gas
 #############################################################
-function idealGasH(T)
+function idealH(T)
 	# Calculate the enthalpy of an ideal gas using 
 	# $\vt{h}\ig(T) = \Delta_{f} \vt{h}\ig(T_{\mathrm{ref}}) + \int_{T_{\mathrm{ref}}}^{T} \! \vt{c}_{p}(\tau) \, \mathrm{d}\tau$
 	h = h_ref + c_p*(T-T_ref)
 end
 
-function idealGasS(T,V,n)
+function idealS(T,V,n)
 	# Calculate the entropy of an ideal gas using
 	# $\vt{s}\ig(T,V,\vt{n}) = \vt{s}\ig(T_{\mathrm{ref}}, p_{\mathrm{ref}}) + \int_{T_{\mathrm{ref}}}^{T} \! \frac{\vt{c}_{p}(\tau)}{\tau} \, \mathrm{d}\tau - R \ln\left(\frac{\vt{n}RT}{Vp_{\mathrm{ref}}}\right)$
 	s = s_ref + c_p*log(T/T_ref) - R*log((n*R*T)/(V*p_ref))
 end
 
-function idealGasMu(T,V,n)
+function idealMu(T,V,n)
 	# Calculate the chemical potential of an ideal gas 
 	# $\mathrm{\mu}\ig(T,V,\vt{n}) = \vt{h}\ig - T\vt{s}\ig$
 	h 	= idealGasH(T)
@@ -71,7 +72,7 @@ function idealGasMu(T,V,n)
 	mu	= h - T*s 
 end
 
-function idealGasA(T,V,n)
+function idealA(T,V,n)
 	# Calculate the Helmholtz free energy of an ideal gas 
 	# $A(T,V,\vt{n}) = -pV + \sum_{i=1}^n \! \mu_i N_i$
 	mu	= idealGasMu(T,V,n)

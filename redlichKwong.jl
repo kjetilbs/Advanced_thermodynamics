@@ -1,33 +1,29 @@
 #############################################################
-# Redlich-Kwong functions
-#
-# Functions related to the Redlich-Kwong equation of state
-#
-# Author: 	Kjetil Sonerud
-# Updated:	2014-11-16 14:10:33
-#############################################################
-
-#############################################################
 # Thermodynamic functions using Redlich-Kwong
+#
+# Redlich-Kwong equation of state:
+#	- redlichKwongA:	Parameter A used in the R-K EOS
+#	- redlichKwongB:	Parameter B used in the R-K EOS
+#	- redlichKwongP:	pressure from the R-K EOS
 #
 # Functions for calculating thermodynamic potentials, 
 # properties and useful derivatives using Redlich-Kwong EOS: 
 #
-#	- idealGasH: enthalpy for an ideal gas
-#	- idealGasS: entropy for an ideal gas
-#	- idealGasMu: chemical potential for an ideal gas
-#	- idealGasA: Helmholtz free energy for an ideal gas
+# Residual functions using R-K EOS: 
+#	- residualA: 		Residual Helmholtz free energy
+#	- residualS:		Residual entropy
+#	- residualMu:		Residual chemical potential
 #
 # Derivatives of Helmholtz free energy using ideal gas:
-#	- Aig_T: 	$\pdc{A\ig}{T}{V,\vt{n}} = - S\ig$ 
-#	- Aig_V: 	$\pdc{A\ig}{V}{T,\vt{n}} = - p\ig$
-#	- Aig_n: 	$\pdc{A\ig}{\vt{n}}{T,V} = \mu\ig$
-#	- Aig_TT:	$\pddc{A\ig}{T}{T}{V,\vt{n}}$ 
-#	- Aig_TV:	$\pddc{A\ig}{T}{V}{\vt{n}}$ 
-#	- Aig_Tn:	$\pddc{A\ig}{T}{\vt{n}}{V}$
-#	- Aig_VV:	$\pddc{A\ig}{V}{V}{T,\vt{n}}$
-#	- Aig_nV:	$\pddc{A\ig}{\vt{n}}{V}{T}$
-#	- Aig_nn:	$\pddc{A\ig}{\vt{n}}{\vt{n}}{T,V}$
+#	- Aig_T: 			$\pdc{A\ig}{T}{V,\vt{n}} = - S\ig$ 
+#	- Aig_V: 			$\pdc{A\ig}{V}{T,\vt{n}} = - p\ig$
+#	- Aig_n: 			$\pdc{A\ig}{\vt{n}}{T,V} = \mu\ig$
+#	- Aig_TT:			$\pddc{A\ig}{T}{T}{V,\vt{n}}$ 
+#	- Aig_TV:			$\pddc{A\ig}{T}{V}{\vt{n}}$ 
+#	- Aig_Tn:			$\pddc{A\ig}{T}{\vt{n}}{V}$
+#	- Aig_VV:			$\pddc{A\ig}{V}{V}{T,\vt{n}}$
+#	- Aig_nV:			$\pddc{A\ig}{\vt{n}}{V}{T}$
+#	- Aig_nn:			$\pddc{A\ig}{\vt{n}}{\vt{n}}{T,V}$
 #
 # Resulting Hessian matrix based on Helmholtz free energy
 # for ideal gas with constant temperature $T$: 
@@ -41,49 +37,62 @@ module redlichKwong
 
 # Functions to be available in global scope once the module is
 # imported/being used
-export redlichKwongEOS							#rkHessian
+export redlichKwongP, residualA							#rkHessian
 
-# Reading component data
-include("readComponentData.jl")
-
-# Defining constants
+# Defining constants and reading component data. Needs to be 
+# included within the module scope
 include("defineConstants.jl")
+
+# Using the ideal gas module
+# include("idealGas.jl")
+using idealGas
+println("Contents of ideal gas module:")
+whos(idealGas)
+println("\n")
 
 #############################################################
 # Redlich-Kwong EOS
 #############################################################
-function redlichKwongParameterA(T,n)
+function redlichKwongA(T,n)
 	# Calculate the parameter A for the Redlich-Kwong EOS
-	# 
-	#	A(T,n) = (n'*(a*a')*n)/(T^(0.5))
-	# 
-	# where a is defined in defineConstants.jl 
-
-	# Using "dot" for dot product in Julia
+	# $A(T,\vt{n}) = \frac{1}{T^{1/2}}\vtt{n}(\vt{a}\:\vtt{a})\vt{n}$
+	# where a is defined in defineConstants.jl as 
+	# $a_i = \frac{1}{9(2^{1/3}-1)}\frac{R^2T_{c,i}^{5/2}}{p_{c,i}} = \Omega_a \frac{R^2T_{c,i}^{5/2}}{p_{c,i}}$
 	A = dot(n,(((sqrt(a_RK)*sqrt(a_RK)')*n)/sqrt(T)))
 end
 
-function redlichKwongParameterB(n)
+function redlichKwongB(n)
 	# Calculate the parameter B for the Redlich-Kwong EOS
-	# 
-	# 	B(n) = b'*n
-	#
-	# 	where b is defined in defineConstants.jl  
-
-	# Using "dot" for dot product in Julia
+	# $B(\vt{n}) = \vtt{b}\:\vt{n}$
+	# where b is defined in defineConstants.jl as
+	# $b_i = \frac{2^{1/3}-1}{3}\frac{RT_{c,i}}{p_{c,i}} = \Omega_b \frac{RT_{c,i}}{p_{c,i}}$ 
 	B = dot(b_RK,n)
 end
 
-function redlichKwongEOS(T,V,n)
+function redlichKwongP(T,V,n)
 	# Calculate the pressure from the Redlich-Kwong EOS:
-	# 	p_RK(T,V,n) = (NRT)/(V-b) - (A)/(V(V-B))
+	# $p\rk = (T,V,\vt{n}) = \frac{NRT}{V-B} - \frac{A}{V(V+B)}$
 	
+	# Calculating A and B parameters
+	A = redlichKwongA(T,n)
+	B = redlichKwongB(n)
+
+	# Calculating the pressure
+	p = (sum(n)*R*T)/(V-B) - (A/(V*(V+B)))
+end
+
+#############################################################
+# Residual thermodynamic potentials using Redlich-Kwong EOS
+#############################################################
+function residualA(T,V,n)
+	# Calculate the residual Helmholtz free energy using the
+	# R-K EOS
+	# $A\rrk(T,V,\vt{n}) = NRT\ln \left(\frac{V}{V-B}\right)+\frac{A}{B}\ln \left(\frac{V}{V+B}\right)$
 	# Calculating A and B parameters
 	A = redlichKwongParameterA(T,n)
 	B = redlichKwongParameterB(n)
 
-	# Calculating the pressure
-	p = (sum(n)*R*T)/(V-B) - (A/(V*(V+B)))
+	helm = sum(n)*R*T*log(V/(V-B)) + (A/B)*log(V/(V+B))
 end
 
 #############################################################

@@ -93,8 +93,39 @@ function Aig_TT(T,V,n)
 	y = (R/T)*ones(length(n))
 	A_TT = -dot(n,(x-y))
 end
- 
 
+function Aig_TV(T,V,n)
+	# Calculate the second derivative of Helmholtz free energy 
+	# of an ideal gas with respect to temperature and volume
+	# $\pddc{A\ig}{T}{V}{\vt{n}} = -\frac{\vtt{n} R}{V}$
+	A_TV = -sum(n)*(R/V)
+end
 
+function Aig_Tn(T,V,n)
+	# Calculate the second derivative of Helmholtz free energy 
+	# of an ideal gas with respect to temperature and mole vector
+	# $\pddc{A\ig}{T}{\vt{n}}{V} = - \vt{s}\ig + R$
+	A_TV = -idealGasS(T,V,n) + R*ones(length(n))
+end
 
+function Aig_VV(T,V,n)
+	# Calculate the second derivative of Helmholtz free energy 
+	# of an ideal gas with respect to volume
+	# $\pddc{A\ig}{V}{V}{T,\vt{n}} = \frac{\vtt{n} RT}{V^2}$
+	A_VV = sum(n)*(R*T/V^2)
+end
+
+function Aig_nV(T,V,n)
+	# Calculate the second derivative of Helmholtz free energy 
+	# of an ideal gas with respect to mole vector and volume
+	# $\pddc{A\ig}{\vt{n}}{V}{T} = -\frac{\vt{e} RT}{V}$
+	A_nV = -(ones(length(n)))*((R*T)/V)
+end
+
+function Aig_nn(T,V,n)
+	# Calculate the second derivative of Helmholtz free energy 
+	# of an ideal gas with respect to mole vector
+	# $\pddc{A\ig}{\vt{n}}{\vtt{n}}{T,V} = -RT(\mathrm{diag}(\vt{n}))^{-1}$
+	A_nn = -R*T*(inv(diagm(n)))
+end
 

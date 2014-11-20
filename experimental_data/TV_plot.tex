@@ -46,13 +46,13 @@
         % restrict y to domain=-1e7:1e7,
         %domain=-10:10
         ]
-        \addplot[color=cyan, mark=*, only marks] file {dewPoints_VT.dat};
-        \addplot[color=magenta, mark=triangle*, only marks] file {bubblePoints_VT.dat};
+        \addplot[color=cyan, mark=triangle*, only marks] file {dewPoints_VT.dat};
+        \addplot[color=magenta, mark=*, only marks] file {bubblePoints_VT.dat};
         % Use draw=gray to define the outline color
 
         % \draw[black,very thin, xstep=1, ystep=5] (axis cs:1e-4,150) grid (axis cs:8e-4,180);
-        \draw[black, pattern=dots] (axis cs:1.1e-4,162) rectangle (axis cs:7e-4,192);
-        \node[fill=white] at (axis cs:2.8e-4,175) {Iteration area};
+        % \draw[black, pattern=dots] (axis cs:1.1e-4,162) rectangle (axis cs:7e-4,192);
+        % \node[fill=white] at (axis cs:2.8e-4,175) {Iteration area};
     \end{axis}
 \end{tikzpicture}
 

@@ -129,3 +129,12 @@ function Aig_nn(T,V,n)
 	A_nn = -R*T*(diagm(1./n))
 end
 
+function idealGasHessian(T,V,n)
+	# Calculate the Hessian matrix based on Helmholtz free energy
+	# for ideal gas with constant temperature $T$:
+	A_VV 	= Aig_VV(T,V,n)
+	A_nV 	= Aig_nV(T,V,n) 
+	A_nn 	= Aig_nn(T,V,n)
+
+	hessian = [A_VV transpose(A_nV); A_nV A_nn]
+end

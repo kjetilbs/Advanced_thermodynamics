@@ -24,7 +24,7 @@ using idealGas
 using redlichKwong
 
 #############################################################
-# Equilibrium calculation
+# Equilibrium calculation (N-R-loop)
 #############################################################
 
 function equilibriumCalculation(x, x_total, T)
@@ -37,7 +37,8 @@ function equilibriumCalculation(x, x_total, T)
 	residual 		= 1e10
 
 	# Norm value; initialized to a large number
-	norm 			= 1e10
+	# NB! Don't use norm, as it is a Julia function (!)
+	myNorm 			= 1e10
 
 	# Iteration counter; initial value
 	iterationCount 	= 0
@@ -59,6 +60,7 @@ function equilibriumCalculation(x, x_total, T)
 	while !hasConverged && iterationCount < maxIterations
 		# Printing iteration step
 		println("Iteration nr.: "*string(iterationCount))
+		println("\n")
 
 		# Unwrapping the state vector 
 		V_vap 			= x_vap[1]
@@ -82,11 +84,24 @@ function equilibriumCalculation(x, x_total, T)
 		currentGradient = [p_vap; mu_vap] - [p_liq; mu_liq]
 		currentHessian 	= H_vap + H_liq
 
+		# println(currentHessian)
+		# hessianType = typeof(currentHessian)
+		# println("Hessian type: "*string(hessianType))
+
+		# println("Before...")
+		# Printing the matrix norm
+		matrixNorm = norm(currentHessian)
+		# println("After!")
+
+		println("Matrix norm: "*string(matrixNorm))
+		println("\n")
+
 		# Applying the N-R iteration step
 		deltaX 			= -currentHessian\currentGradient
 
 		# Printing the current step
 		println("Current step: "*string(deltaX))
+		println("\n")
 
 		# Has converged? (i.e. sufficiently small change)
 		if maximum(abs(deltaX)) < convergenceTol
@@ -104,8 +119,61 @@ function equilibriumCalculation(x, x_total, T)
 		println("x_vap: "*string(x_vap))
 		println("x_liq: "*string(x_liq))
 		println("Deviation from total: "*string(x_total-(x_vap+x_liq)))
+		println("\n")
+		println("\n")
+		println("\n")
 	end
 end
+
+#############################################################
+# Equilibrium calculation (N-R-loop)
+#############################################################
+
+function phaseEquilibrium(x, x_total, rangeT, rangeV)
+	# Calculate the necessary phase equilibrium data for a 
+	# multiphase equilibrium problem in the temperature range 
+	# rangeT = [$T_{\mathrm{min}}$; ... ; $T_{\mathrm{max}}$] 
+	# and volume range
+	# rangeV = [$V_{\mathrm{min}}$; ... ; $V_{\mathrm{max}}$] 
+	# given an initial guess and the constraints 
+	# (in the form of the total volume and total amount of substance)
+	
+	# Dimensions of the iteration grid
+	numVolumes 		= length(rangeV)
+	numTemperatures = length(rangeT)
+
+	# Initializing the solution vectors
+	ansPressure 	= zeros(numVolumes, numTemperatures)
+	ansHelmholtz 	= zeros(numVolumes, numTemperatures)
+	ansEntropy 		= zeros(numVolumes, numTemperatures)
+	ansEnthalpy 	= zeros(numVolumes, numTemperatures)
+	ansVolumeTotal 	= zeros(numVolumes, numTemperatures)
+	ansVolumeVap 	= zeros(numVolumes, numTemperatures)
+	ansVolumeLiq 	= zeros(numVolumes, numTemperatures)
+	ansTemperature 	= zeros(numVolumes, numTemperatures)
+
+	# push! vs preinitializing and counters?
+
+	# Want to start from $T_{\mathrm{min}}$ at rangeV[1], then $T_{\mathrm{max}}$
+	# at rangeV[2], the $T_{\mathrm{min}}$ at rangeV[3] and so 
+	# on, in accordance with the proposed iteration scheme.
+	# A suitable counter will take care of this.  
+	volumeCounter = 0
+
+	for volume in rangeV
+		
+		volumeCounter += 1
+		if mod(volumeCounter,2) == 1
+			rangeT = flipud(rangeT)
+		end
+
+		for temperature in rangeT
+			# Do it!
+		end
+	end
+
+end
+
 
 #############################################################
 # End module

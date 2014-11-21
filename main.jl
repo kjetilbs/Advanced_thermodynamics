@@ -84,11 +84,36 @@ println("Contents of Redlich-Kwong module:")
 whos(redlichKwong)
 println("\n")
 
-# Temperature
-T = 0.200; # [K]
 
-# Volume
-V = 1e-3; # [m^3]
+#############################################################
+# Initial guess for the equilibrium calculation
+#############################################################
+
+# Temperature
+T = 0.180; 		# [K]
+
+x = 
+[
+0.000287914;	# [m^3]
+0.0148554;
+0.759583;
+0.00713192; 
+0.000512887;
+6.76927e-5;
+]
+
+x_tot = 
+[
+0.0003			# [m^3]
+0.0159952
+0.944717
+0.0259922
+0.00809757
+0.00519844
+]
+
+
+#############################################################
 
 # Using equilibrium module
 include("equilibriumCalculations.jl")
@@ -96,8 +121,14 @@ using equilibriumCalculations
 println("Contents of equilibriumCalculations module:")
 whos(equilibriumCalculations)
 
+equilibriumCalculation(x,x_tot,T)
+
 # println(idealHessian(298.15,0.1,n_vapor))
 # println(idealGasEOS(298.15,0.1,n_vapor))
+
+# Iteration vectors for temperature and volume
+rangeT = linspace(0.160,0.190,50)
+rangeV = linspace(2e-4,8e-4,50)
 
 
 

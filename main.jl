@@ -83,6 +83,12 @@ using redlichKwong
 println("Contents of Redlich-Kwong module:")
 whos(redlichKwong)
 
+# Temperature
+T = 200; # [K]
+
+# Volume
+V = 0.1; # [m^3]
+
 # println(idealHessian(298.15,0.1,n_vapor))
 # println(idealGasEOS(298.15,0.1,n_vapor))
 

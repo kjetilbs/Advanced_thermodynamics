@@ -38,7 +38,7 @@ module redlichKwong
 
 # Functions to be available in global scope once the module is
 # imported/being used
-export pressure, residualA, enthalpy			#rkHessian
+export pressure, entropy, enthalpy, chemicalPotential, helmholtz, hessian
 
 # Defining constants and reading component data. Needs to be 
 # included within the module scope
@@ -276,9 +276,25 @@ function residualA_nn(T,V,n)
 				+ (A/B)*((B_n*B_n')/(V+B)^2)
 end
 
+#############################################################
+# Hessian matrices
+#############################################################
 
+function residualHessian(T,V,n)
+	# Calculate the Hessian matrix based on residual Helmholtz 
+	# free energy using R-K EOS with constant temperature $T$:
+	A_VV 	= residualA_VV(T,V,n)
+	A_nV 	= residualA_nV(T,V,n) 
+	A_nn 	= residualA_nn(T,V,n)
 
+	H = [A_VV transpose(A_nV); A_nV A_nn]
+end
 
+function hessian(T,V,n)
+	# Calculate the Hessian matrix based on Helmholtz free energy 
+	# using R-K EOS with constant temperature $T$:
+	H = residualHessian(T,V,n) + idealHessian(T,V,n)
+end
 
 #############################################################
 # End module

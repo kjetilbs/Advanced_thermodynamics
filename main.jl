@@ -82,12 +82,19 @@ include("redlichKwong.jl")
 using redlichKwong
 println("Contents of Redlich-Kwong module:")
 whos(redlichKwong)
+println("\n")
 
 # Temperature
 T = 0.200; # [K]
 
 # Volume
 V = 1e-3; # [m^3]
+
+# Using equilibrium module
+include("equilibriumCalculations.jl")
+using equilibriumCalculations
+println("Contents of equilibriumCalculations module:")
+whos(equilibriumCalculations)
 
 # println(idealHessian(298.15,0.1,n_vapor))
 # println(idealGasEOS(298.15,0.1,n_vapor))

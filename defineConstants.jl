@@ -27,21 +27,21 @@ componentData = readdlm("component_data.csv",',','\n',skipstart=2)
 # Component names
 const global componentNames = convert(Array{String,1},componentData[:,1])
 
-# Critical temperatures [K]
-const global tc = convert(Array{Float64,1},componentData[:,2])
+# Critical temperatures [kK]
+const global tc = convert(Array{Float64,1},componentData[:,2])*1e-3
 
-# Critical pressure [Pa]
-const global pc = convert(Array{Float64,1},componentData[:,3])
+# Critical pressure [MPa]
+const global pc = convert(Array{Float64,1},componentData[:,3])*1e-6
 
-# Reference enthalpies [J/mol]
-const global h_ref = convert(Array{Float64,1},componentData[:,4])/1000
+# Reference enthalpies [kJ/mol]
+const global h_ref = convert(Array{Float64,1},componentData[:,4])*1e-6
 
-# Reference entropies [J/K mol]
-const global s_ref = convert(Array{Float64,1},componentData[:,5])/1000
+# Reference entropies [kJ/kK mol]
+const global s_ref = convert(Array{Float64,1},componentData[:,5])*1e-3
 
-# Ideal gas heat capacity @175K [J/K mol]
+# Ideal gas heat capacity @175K [kJ/kK mol]
 # Note: assumed to be constant. Should be changed for accuracy
-const global c_p = convert(Array{Float64,1},componentData[:,6])/1000
+const global c_p = convert(Array{Float64,1},componentData[:,6])*1e-3
 
 # Cp-values; ideally, these should be integrated analytically 
 # from the DIPPR expressions, and then used as is. As a quick
@@ -52,17 +52,17 @@ const global c_p = convert(Array{Float64,1},componentData[:,6])/1000
 # Thermodynamic constants
 #############################################################
 
-# Universal gas constant [J/K mol]
-const global R = 8.3145
+# Universal gas constant [kJ/kK mol]
+const global R = 8.3145*1e-3
 
-# Reference temperature [K]
-const global T_ref = 298.15
+# Reference temperature [kK]
+const global T_ref = 298.15*1e-3
 
-# Reference pressure [Pa]
-const global p_ref = 1e5
+# Reference pressure [MPa]
+const global p_ref = 1e5*1e-6
 
-# Redlich-Kwong constant a [J^2 K^0.5/mol^2 Pa]
+# Redlich-Kwong constant a [kJ^2 kK^0.5/kmol^2 kPa]
 const global a_RK = (1/(9*((2^(1/3))-1)))*((R^2*tc.^(5/2))./pc)
 
-# Redlich-Kwong constant b [J/Pa mol]
+# Redlich-Kwong constant b [kJ/kPa kmol]
 const global b_RK = (((2^(1/3))-1)/3)*((R*tc)./pc)

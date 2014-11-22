@@ -88,29 +88,31 @@ println("\n")
 #############################################################
 # Initial guess for the equilibrium calculation
 #############################################################
+# Calculating the hard sphere volume
+V_liq = 1.5*redlichKwong.redlichKwongB(n_liquid)
+V_vap = 2e-4 - V_liq
 
-# Temperature
-T = 0.180; 		# [K]
+# Initial guess, vapor phase
+x = [V_vap, n_vapor]
 
-x = 
-[
-0.000287914;	# [m^3]
-0.0148554;
-0.759583;
-0.00713192; 
-0.000512887;
-6.76927e-5;
-]
+# x = 
+# [
+# 0.000287914;	# [m^3]
+# 0.0148554;
+# 0.759583;
+# 0.00713192; 
+# 0.000512887;
+# 6.76927e-5;
+# ]
 
-x_tot = 
-[
-0.0003			# [m^3]
-0.0159952
-0.944717
-0.0259922
-0.00809757
-0.00519844
-]
+# n_tot = 
+# [
+# 0.0159952
+# 0.944717
+# 0.0259922
+# 0.00809757
+# 0.00519844
+# ]
 
 
 #############################################################
@@ -121,14 +123,20 @@ using equilibriumCalculations
 println("Contents of equilibriumCalculations module:")
 whos(equilibriumCalculations)
 
-equilibriumCalculation(x,x_tot,T)
+# equilibriumCalculation(x,x_tot,T)
 
 # println(idealHessian(298.15,0.1,n_vapor))
 # println(idealGasEOS(298.15,0.1,n_vapor))
 
 # Iteration vectors for temperature and volume
-rangeT = linspace(0.160,0.190,50)
-rangeV = linspace(2e-4,8e-4,50)
+rangeT = linspace(0.160,0.190,5)
+rangeV = linspace(2e-4,8e-4,5)
+
+# Initial guess vector x:
+# 	- x[1]: 		Vapor phase volume 
+# 	- x[2:end]:		Vapor phase mole vector
+
+ansTemperature, ansVolumeTotal = phaseEquilibrium(x,n_feed,rangeT,rangeV)
 
 
 

@@ -44,7 +44,7 @@ function equilibriumCalculation(x, x_total, T)
     iterationCount  = 0
 
     # Maximum allowed iteration steps
-    maxIterations   = 10000
+    maxIterations   = 1000
 
     # Convergence tolerance 
     convergenceTol  = 1e-8
@@ -65,7 +65,7 @@ function equilibriumCalculation(x, x_total, T)
     # Newton-Raphson iteration loop
     while !hasConverged && iterationCount < maxIterations
         # Printing iteration step
-        if DEBUG2
+        if DEBUG3
             println("\n")
             println("Iteration nr.: "*string(iterationCount))
         end
@@ -100,8 +100,21 @@ function equilibriumCalculation(x, x_total, T)
         H_vap           = hessian(T,V_liq,n_liq)
 
         # Preparing the iteration
-        currentGradient = [p_vap; mu_vap] - [p_liq; mu_liq]
+        currentGradient = [p_vap, mu_vap] - [p_liq, mu_liq]
         currentHessian  = H_vap + H_liq
+
+        #############################################################
+        # Debugging gradient
+        #############################################################
+        if DEBUG2
+            println("p_vap: "*string(p_vap))
+            println("mu_vap: "*string(mu_vap))
+            println("p_liq: "*string(p_liq))
+            println("mu_liq: "*string(mu_liq))
+            println("currentGradient: "*string(currentGradient))
+            sleep(0.1)
+        end
+        #############################################################
 
         # println(currentHessian)
         # hessianType = typeof(currentHessian)

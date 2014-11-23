@@ -76,3 +76,6 @@ const global DEBUG1 = false
 
 # Debug, level 2?
 const global DEBUG2 = true
+
+# Debug, level 3?
+const global DEBUG3 = true

@@ -35,7 +35,7 @@ n_feed = vec(n_feed/sum(n_feed))
 
 # Distribution of components in the two phases
 # n_vapor = [0.9; 0.8; 0.1; 0.01; 0.001].*n_feed
-n_vapor = [0.99; 0.9; 0.5; 0.1; 0.01].*n_feed
+n_vapor = [0.9; 0.7; 0.5; 0.3; 0.1].*n_feed
 
 n_liquid = n_feed - n_vapor
 
@@ -89,7 +89,7 @@ println("\n")
 # Initial guess for the equilibrium calculation
 #############################################################
 # Calculating the hard sphere volume
-V_liq = 1.5*redlichKwong.redlichKwongB(n_liquid)
+V_liq = 1.3*redlichKwong.redlichKwongB(n_liquid)
 V_vap = 2e-4 - V_liq
 
 # Initial guess, vapor phase
@@ -129,12 +129,14 @@ whos(equilibriumCalculations)
 # println(idealGasEOS(298.15,0.1,n_vapor))
 
 # Iteration vectors for temperature and volume
-rangeT = linspace(0.160,0.190,100)
-rangeV = linspace(2e-4,8e-4,100)
+rangeT = linspace(0.160,0.190,10)
+rangeV = linspace(2e-4,8e-4,10)
 
 # Initial guess vector x:
 # 	- x[1]: 		Vapor phase volume 
 # 	- x[2:end]:		Vapor phase mole vector
+
+# hessian(0.16, x[1], x[2:end])
 
 ansArray = phaseEquilibrium(x,n_feed,rangeT,rangeV)
 

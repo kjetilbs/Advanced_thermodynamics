@@ -35,7 +35,7 @@ n_feed = vec(n_feed/sum(n_feed))
 
 # Distribution of components in the two phases
 # n_vapor = [0.9; 0.8; 0.1; 0.01; 0.001].*n_feed
-n_vapor = [0.5; 0.5; 0.5; 0.5; 0.5].*n_feed
+n_vapor = [0.99; 0.9; 0.5; 0.1; 0.01].*n_feed
 
 n_liquid = n_feed - n_vapor
 
@@ -129,14 +129,14 @@ whos(equilibriumCalculations)
 # println(idealGasEOS(298.15,0.1,n_vapor))
 
 # Iteration vectors for temperature and volume
-rangeT = linspace(0.160,0.190,5)
-rangeV = linspace(2e-4,8e-4,5)
+rangeT = linspace(0.160,0.190,100)
+rangeV = linspace(2e-4,8e-4,100)
 
 # Initial guess vector x:
 # 	- x[1]: 		Vapor phase volume 
 # 	- x[2:end]:		Vapor phase mole vector
 
-ansTemperature, ansVolumeTotal = phaseEquilibrium(x,n_feed,rangeT,rangeV)
+ansArray = phaseEquilibrium(x,n_feed,rangeT,rangeV)
 
 
 

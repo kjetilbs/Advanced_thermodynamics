@@ -66,3 +66,13 @@ const global a_RK = (1/(9*((2^(1/3))-1)))*((R^2*tc.^(5/2))./pc)
 
 # Redlich-Kwong constant b [kJ/kPa kmol]
 const global b_RK = (((2^(1/3))-1)/3)*((R*tc)./pc)
+
+#############################################################
+# Other variables 
+#############################################################
+
+# Debug, level 1?
+const global DEBUG1 = false
+
+# Debug, level 2?
+const global DEBUG2 = true

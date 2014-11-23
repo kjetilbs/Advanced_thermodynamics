@@ -44,7 +44,7 @@ function equilibriumCalculation(x, x_total, T)
     iterationCount  = 0
 
     # Maximum allowed iteration steps
-    maxIterations   = 1000
+    maxIterations   = 10000
 
     # Convergence tolerance 
     convergenceTol  = 1e-8
@@ -58,15 +58,17 @@ function equilibriumCalculation(x, x_total, T)
 
     #############################################################
     # Checking iteration variables
-    println("x_vap: "*string(x_vap))
-    println("x_liq: "*string(x_liq))
+    # println("x_vap: "*string(x_vap))
+    # println("x_liq: "*string(x_liq))
     #############################################################
 
     # Newton-Raphson iteration loop
     while !hasConverged && iterationCount < maxIterations
         # Printing iteration step
-        println("Iteration nr.: "*string(iterationCount))
-        println("\n")
+        if DEBUG2
+            println("\n")
+            println("Iteration nr.: "*string(iterationCount))
+        end
 
         # Unwrapping the state vector 
         V_vap           = x_vap[1]
@@ -76,14 +78,14 @@ function equilibriumCalculation(x, x_total, T)
         n_liq           = x_liq[2:end]
 
         #############################################################
-        # Checking if V_liq > B
-        println("V_liq: "*string(V_liq))
-        B_test = redlichKwong.redlichKwongB(n_liq)
-        println("B: "*string(B_test))
+        # # Checking if V_liq > B
+        # println("V_liq: "*string(V_liq))
+        # B_test = redlichKwong.redlichKwongB(n_liq)
+        # println("B: "*string(B_test))
 
-        # Checking mole numbers
-        println("n_vap: "*string(n_vap))
-        println("n_liq: "*string(n_liq))
+        # # Checking mole numbers
+        # println("n_vap: "*string(n_vap))
+        # println("n_liq: "*string(n_liq))
         #############################################################
 
         # Calculating the current gradient vector for each phase 
@@ -110,39 +112,89 @@ function equilibriumCalculation(x, x_total, T)
         matrixNorm      = norm(currentHessian)
         # println("After!")
 
-        println("Matrix norm: "*string(matrixNorm))
-        println("\n")
+        if DEBUG2
+            println("Matrix norm: "*string(matrixNorm))
+            println("Current gradient: "*string(currentGradient))
+        end
 
         # Applying the N-R iteration step
         deltaX          = -currentHessian\currentGradient
 
+        # Making dummy variables to check the step length
+        x_vap_try = x_vap
+        x_liq_try = x_liq
+
+        # Attempt to update the state according to the iteration step
+        x_vap_try += deltaX
+        x_liq_try -= deltaX
+
+        # Debugging
+        if DEBUG1
+            println("Before step size red. - x_vap_try: \n"*string(x_vap_try))
+            println("Before step size red. - x_liq_try: \n"*string(x_liq_try))
+            println("Checking solution: "*string(checkSolution(x_vap_try, x_liq_try)))
+            println("\n\n")
+            println("Logic check - checkSolution: "*string(checkSolution(x_vap_try, x_liq_try)==false))
+            println("Logic check - step size: "*string(minimum(abs(deltaX)) > 1e-15))
+            println("Size check - step size: "*string(minimum(abs(deltaX))))
+        end
+
+        # For debugging
+        steplengthCounter = 0
+
+        while ((checkSolution(x_vap_try, x_liq_try) == false) && (minimum(abs(deltaX)) > abs(1e-15)))
+            if DEBUG2
+                steplengthCounter += 1
+                println("Reducing step length... "*string(steplengthCounter)". attempt")
+            end
+
+            # Take half the step length 
+            deltaX = deltaX/2
+
+            # Update the current state
+            x_vap_try += deltaX
+            x_liq_try -= deltaX
+        end
+
+        # Debugging
+        if DEBUG1
+            println("x_vap_try: \n"*string(x_vap_try))
+            println("x_liq_try: \n"*string(x_liq_try))
+        end
+
+        # Updating the actual state after possible step size reduction 
+        x_vap += deltaX
+        x_liq -= deltaX
+
         # Printing the current step
-        println("Current step: "*string(deltaX))
-        println("\n")
+        # println("Current step: "*string(deltaX))
+        # println("\n")
 
         # Has converged? (i.e. sufficiently small change)
-        if maximum(abs(deltaX)) < convergenceTol
+        # if maximum(abs(deltaX)) < convergenceTol
+        if norm(currentGradient) < convergenceTol
             hasConverged = true
         end
 
         # Increment the iteration counter
         iterationCount += 1
 
-        # Update the state according to the iteration step
-        x_vap += 1e-2*deltaX
-        x_liq -= 1e-2*deltaX
-
         # Printing the current state
-        println("x_vap: "*string(x_vap))
-        println("x_liq: "*string(x_liq))
-        println("Deviation from total: "*string(x_total-(x_vap+x_liq)))
-        println("\n")
-        println("\n")
-        println("\n")
+        # println("x_vap: "*string(x_vap))
+        # println("x_liq: "*string(x_liq))
+        # println("Deviation from total: "*string(x_total-(x_vap+x_liq)))
+        # println("\n")
+        # println("\n")
+        # println("\n")
     end
 
-    # Equilibrium composition
-    return x_vap
+    # Check if the solution has converged
+    if hasConverged == true
+        # Equilibrium composition, vapor phase
+        return x_vap
+    else
+        error("No solution is found for ("*string(x_total[1])*","*string(T)*")")
+    end
 end
 
 #############################################################
@@ -167,11 +219,15 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
     ansVolumeTotal      = zeros(numVolumes, numTemperatures)
     ansVolumeVap        = zeros(numVolumes, numTemperatures)
     ansVolumeLiq        = zeros(numVolumes, numTemperatures)
-    ansCompositionVap   = zeros(numVolumes, numTemperatures)
-    ansCompositionLiq   = zeros(numVolumes, numTemperatures)
+    ansCompositionVap   = [zeros(length(n_total)) for x = 1:numVolumes, y = 1:numTemperatures]
+    ansCompositionLiq   = [zeros(length(n_total)) for x = 1:numVolumes, y = 1:numTemperatures]
     ansEntropy          = zeros(numVolumes, numTemperatures)
     ansEnthalpy         = zeros(numVolumes, numTemperatures)
     
+    # println(ansTemperature)
+    # println(ansCompositionLiq)
+
+
     # Not needed?
     # ansPressure       = zeros(numVolumes, numTemperatures)
     # ansHelmholtz      = zeros(numVolumes, numTemperatures)
@@ -227,18 +283,22 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
             # Entropy
             S_vap       = entropy(T,V_vap,n_vap)
             S_liq       = entropy(T,V_liq,n_liq)
-            ansEntropy[end-temperature+1, volume]       = S_vap + S_liq
+            ansEntropy[end-temperature+1, volume]   = S_vap + S_liq
 
             # Enthalpy
             H_vap       = enthalpy(T,V_vap,n_vap)
             H_liq       = enthalpy(T,V_liq,n_liq)
-            ansEnthalpy[end-temperature+1, volume]      = H_vap + H_liq
+            ansEnthalpy[end-temperature+1, volume]  = H_vap + H_liq
 
             # Storing the variables at current ($T$,$V$) and composition
-            ansTemperature[end-temperature+1, volume]   = T
-            ansVolumeTotal[end-temperature+1, volume]   = V
-            ansVolumevap[end-temperature+1, volume]     = V_vap
-            ansVolumeLiq[end-temperature+1, volume]     = V_liq
+            ansTemperature[end-temperature+1, volume]           = T
+            ansVolumeTotal[end-temperature+1, volume]           = V
+            ansVolumeVap[end-temperature+1, volume]             = V_vap
+            ansVolumeLiq[end-temperature+1, volume]             = V_liq
+            # println("Type n_vap: "*string(typeof(n_vap)))
+            # println("Type ans array: "*string(typeof(ansCompositionVap[end-temperature+1, volume])))
+            ansCompositionVap[end-temperature+1, volume][:]     = n_vap
+            ansCompositionLiq[end-temperature+1, volume][:]     = n_liq
 
             # For testing
             # sleep(1)
@@ -252,6 +312,26 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
     return ansArray
 end
 
+#############################################################
+# Auxiliary functions
+#############################################################
+
+function checkSolution(x_vap, x_liq)
+    # Check that the solutions are physically meaningful:  
+    #   - $V_{\mathrm{vap}} \:,\: V_{\mathrm{liq}} > B$
+    #   - $\vt{n}_{\mathrm{vap}} \:,\: \vt{n}_{\mathrm{liq}} > 0$
+    n_vap = x_vap[2:end]
+    V_vap = x_vap[1]
+    n_liq = x_liq[2:end]
+    V_liq = x_liq[1]
+
+    # Calculating B for vapor and liquid phase
+    B_vap = redlichKwong.redlichKwongB(n_vap)
+    B_liq = redlichKwong.redlichKwongB(n_liq)
+
+    # Assuring that the solutions are physically meaningful
+    flag = (minimum(n_vap) > 0 && minimum(n_liq) > 0 && V_vap >= B_vap && V_liq >= B_liq)
+end
 
 #############################################################
 # End module

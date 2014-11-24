@@ -1,4 +1,4 @@
-#############################################################
+################################################################################
 # Equilibrium calculation
 #
 # Equilibrium calculation for the phase equilibrium using the 
@@ -7,7 +7,7 @@
 #
 # Author:   Kjetil Sonerud
 # Updated:  2014-11-21 15:43:32
-#############################################################
+################################################################################
 
 module equilibriumCalculations
 
@@ -23,9 +23,9 @@ include("defineConstants.jl")
 using idealGas
 using redlichKwong
 
-#############################################################
+################################################################################
 # Equilibrium calculation (N-R-loop)
-#############################################################
+################################################################################
 
 function equilibriumCalculation(x, x_total, T)
     # Calculate the equilibrium state for a multiphase 
@@ -56,11 +56,11 @@ function equilibriumCalculation(x, x_total, T)
     x_vap           = x
     x_liq           = x_total - x
 
-    #############################################################
+    ############################################################################
     # Checking iteration variables
     # println("x_vap: "*string(x_vap))
     # println("x_liq: "*string(x_liq))
-    #############################################################
+    ############################################################################
 
     # Newton-Raphson iteration loop
     while !hasConverged && iterationCount < maxIterations
@@ -77,7 +77,7 @@ function equilibriumCalculation(x, x_total, T)
         V_liq           = x_liq[1]
         n_liq           = x_liq[2:end]
 
-        #############################################################
+        ########################################################################
         # # Checking if V_liq > B
         # println("V_liq: "*string(V_liq))
         # B_test = redlichKwong.redlichKwongB(n_liq)
@@ -86,7 +86,7 @@ function equilibriumCalculation(x, x_total, T)
         # # Checking mole numbers
         # println("n_vap: "*string(n_vap))
         # println("n_liq: "*string(n_liq))
-        #############################################################
+        ########################################################################
 
         # Calculating the current gradient vector for each phase 
         p_vap           = pressure(T,V_vap,n_vap)
@@ -100,21 +100,21 @@ function equilibriumCalculation(x, x_total, T)
         H_vap           = hessian(T,V_liq,n_liq)
 
         # Preparing the iteration
-        currentGradient = [p_vap, mu_vap] - [p_liq, mu_liq]
+        currentGradient = [-p_vap, mu_vap] - [-p_liq, mu_liq]
         currentHessian  = H_vap + H_liq
 
-        #############################################################
+        ########################################################################
         # Debugging gradient
-        #############################################################
+        ########################################################################
         if DEBUG2
             println("p_vap: "*string(p_vap))
             println("mu_vap: "*string(mu_vap))
             println("p_liq: "*string(p_liq))
             println("mu_liq: "*string(mu_liq))
             println("currentGradient: "*string(currentGradient))
-            sleep(0.1)
+            # sleep(0.1)
         end
-        #############################################################
+        ########################################################################
 
         # println(currentHessian)
         # hessianType = typeof(currentHessian)
@@ -210,9 +210,9 @@ function equilibriumCalculation(x, x_total, T)
     end
 end
 
-#############################################################
+################################################################################
 # Equilibrium calculation (N-R-loop)
-#############################################################
+################################################################################
 
 function phaseEquilibrium(x, n_total, rangeT, rangeV)
     # Calculate the necessary phase equilibrium data for a 
@@ -325,9 +325,9 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
     return ansArray
 end
 
-#############################################################
+################################################################################
 # Auxiliary functions
-#############################################################
+################################################################################
 
 function checkSolution(x_vap, x_liq)
     # Check that the solutions are physically meaningful:  
@@ -346,7 +346,7 @@ function checkSolution(x_vap, x_liq)
     flag = (minimum(n_vap) > 0 && minimum(n_liq) > 0 && V_vap >= B_vap && V_liq >= B_liq)
 end
 
-#############################################################
+################################################################################
 # End module
-#############################################################
+################################################################################
 end

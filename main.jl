@@ -90,10 +90,10 @@ println("\n")
 ################################################################################
 # Calculating the hard sphere volume
 V_liq = 1.3*redlichKwong.redlichKwongB(n_liquid)
-V_vap = 2e-4 - V_liq
+V_vap = 7e-4 - V_liq
 
 # Initial guess, vapor phase
-x = [V_vap, n_vapor]
+x_guess = [V_vap, n_vapor]
 
 # x = 
 # [
@@ -132,18 +132,32 @@ whos(equilibriumCalculations)
 # println(idealGasEOS(298.15,0.1,n_vapor))
 
 # Iteration vectors for temperature and volume
-rangeT = linspace(0.160,0.190,10)
-rangeV = linspace(2e-4,8e-4,10)
+rangeT = linspace(0.165,0.180,50)
+rangeV = linspace(3e-4,7e-4,50)
 
 # Initial guess vector x:
 # 	- x[1]: 		Vapor phase volume 
 # 	- x[2:end]:		Vapor phase mole vector
 
-# hessian(0.16, x[1], x[2:end])
+################################################################################
+# Comparing analytic and numeric Hessian
+################################################################################
+# println("Analytic Hessian:")
+# currentAnalyticHessian =    hessian(0.16, x[1], x[2:end])
+# println(round(currentAnalyticHessian,5))
+# include("numericHessian.jl")
+# println("\nNumeric Hessian:")
+# currentNumericHessian   =     numericHessian(0.16, x[1], x[2:end])
+# println(round(currentNumericHessian,5))
+# println("\nRelative error:")
+# println(round((currentNumericHessian-currentAnalyticHessian)./currentNumericHessian,8))
+# println("\nNorm of the difference:")
+# println(round(norm(currentAnalyticHessian - currentNumericHessian),5))
+################################################################################
 
-redlichKwong.residualA_nn(0.16, x[1], x[2:end])
+# redlichKwong.residualA_nn(0.16, x[1], x[2:end])
 
-# ansArray = phaseEquilibrium(x,n_feed,rangeT,rangeV)
+ansArray = phaseEquilibrium(x_guess,n_feed,rangeT,rangeV);
 
 # println(ones(length(n_vapor))*b_RK')
 # println("\n")

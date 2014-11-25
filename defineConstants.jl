@@ -75,7 +75,7 @@ const global b_RK = (((2^(1/3))-1)/3)*((R*tc)./pc)
 const global DEBUG1 = false
 
 # Debug, level 2?
-const global DEBUG2 = true
+const global DEBUG2 = false
 
 # Debug, level 3?
-const global DEBUG3 = true
+const global DEBUG3 = false

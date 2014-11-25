@@ -19,6 +19,9 @@ export equilibriumCalculation, phaseEquilibrium
 # included within the module scope
 include("defineConstants.jl")
 
+# Including numeric Hessian function
+include("numericHessian.jl")
+
 # Using EOS modules
 using idealGas
 using redlichKwong
@@ -77,6 +80,12 @@ function equilibriumCalculation(x, x_total, T)
         V_liq           = x_liq[1]
         n_liq           = x_liq[2:end]
 
+        # Checking volume
+        println("Total volume:    "*string(x_total[1]))
+        println("Vapor volume:    "*string(V_vap))
+        println("Liquid volume:   "*string(V_liq))
+        # sleep(3)
+
         ########################################################################
         # # Checking if V_liq > B
         # println("V_liq: "*string(V_liq))
@@ -96,8 +105,13 @@ function equilibriumCalculation(x, x_total, T)
         mu_liq          = chemicalPotential(T,V_liq,n_liq)
 
         # Calculating the current Hessian matrix for each phase
-        H_liq           = hessian(T,V_vap,n_vap)
-        H_vap           = hessian(T,V_liq,n_liq)
+        # H_liq           = hessian(T,V_vap,n_vap)
+        # H_vap           = hessian(T,V_liq,n_liq)
+
+        # Calculating the current Hessian matrix for each phase, using the 
+        # numeric routine
+        H_liq           = numericHessian(T,V_vap,n_vap)
+        H_vap           = numericHessian(T,V_liq,n_liq)
 
         # Preparing the iteration
         currentGradient = [-p_vap, mu_vap] - [-p_liq, mu_liq]
@@ -112,7 +126,7 @@ function equilibriumCalculation(x, x_total, T)
             println("p_liq: "*string(p_liq))
             println("mu_liq: "*string(mu_liq))
             println("currentGradient: "*string(currentGradient))
-            # sleep(0.1)
+            # sleep(0.3)
         end
         ########################################################################
 
@@ -134,8 +148,8 @@ function equilibriumCalculation(x, x_total, T)
         deltaX          = -currentHessian\currentGradient
 
         # Making dummy variables to check the step length
-        x_vap_try = x_vap
-        x_liq_try = x_liq
+        x_vap_try = copy(x_vap)
+        x_liq_try = copy(x_liq)
 
         # Attempt to update the state according to the iteration step
         x_vap_try += deltaX
@@ -156,15 +170,34 @@ function equilibriumCalculation(x, x_total, T)
         steplengthCounter = 0
 
         while ((checkSolution(x_vap_try, x_liq_try) == false) && (minimum(abs(deltaX)) > abs(1e-15)))
-            if DEBUG2
-                steplengthCounter += 1
-                println("Reducing step length... "*string(steplengthCounter)". attempt")
-            end
-
             # Take half the step length 
             deltaX = deltaX/2
 
-            # Update the current state
+            if DEBUG2
+                steplengthCounter += 1
+                println("Reducing step length... "*string(steplengthCounter)". attempt")
+                println("x_vap_try:")
+                println(x_vap_try)
+                println("x_vap:")
+                println(x_vap)
+                println("x_liq_try:")
+                println(x_liq_try)
+                println("x_liq:")
+                println(x_liq)
+                println("Deviation, try:")
+                println(norm(x_liq_try + x_vap_try - x_total))
+                println("Deviation, actual:")
+                println(norm(x_liq + x_vap - x_total))
+                println("deltaX:")
+                println(deltaX)
+                # sleep(1)
+            end
+
+            # New copy of the current state
+            x_vap_try = copy(x_vap)
+            x_liq_try = copy(x_liq)
+
+            # Update the copy of the current state according to time step
             x_vap_try += deltaX
             x_liq_try -= deltaX
         end
@@ -178,6 +211,13 @@ function equilibriumCalculation(x, x_total, T)
         # Updating the actual state after possible step size reduction 
         x_vap += deltaX
         x_liq -= deltaX
+
+         # Debugging
+        if DEBUG3
+            println("\n\n")
+            println("x_vap after update: \n"*string(x_vap))
+            println("x_liq after update: \n"*string(x_liq))
+        end
 
         # Printing the current step
         # println("Current step: "*string(deltaX))
@@ -214,7 +254,7 @@ end
 # Equilibrium calculation (N-R-loop)
 ################################################################################
 
-function phaseEquilibrium(x, n_total, rangeT, rangeV)
+function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
     # Calculate the necessary phase equilibrium data for a 
     # multiphase equilibrium problem in the temperature range 
     # rangeT = [$T_{\mathrm{min}}$, $\ldots$ , $T_{\mathrm{max}}$] 
@@ -229,6 +269,7 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
 
     # Initializing the solution vectors
     ansTemperature      = zeros(numVolumes, numTemperatures)
+    ansPressure         = zeros(numVolumes, numTemperatures)
     ansVolumeTotal      = zeros(numVolumes, numTemperatures)
     ansVolumeVap        = zeros(numVolumes, numTemperatures)
     ansVolumeLiq        = zeros(numVolumes, numTemperatures)
@@ -240,6 +281,9 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
     # println(ansTemperature)
     # println(ansCompositionLiq)
 
+    # Debugging; storing the maximum error in p and mu
+    maxNormP    = 0
+    maxNormMu   = 0
 
     # Not needed?
     # ansPressure       = zeros(numVolumes, numTemperatures)
@@ -250,15 +294,17 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
     # on, in accordance with the proposed iteration scheme.
 
     # Initializing temperature iteration array
-    temperatureIterationRange = [numTemperatures:-1:1]
+    temperatureIterationRange   = [numTemperatures:-1:1]
+
+    # Initializing volume iteration array
+    volumeIterationRange        = [numVolumes:-1:1]
 
     # Initial guess for the iteration at ($T_{\mathrm{min}}$,$V_{\mathrm{min}}$), vapor phase
     #   - x[1]:         Vapor phase volume 
     #   - x[2:end]:     Vapor phase mole vector
-    x_guess = x
 
     # Iterating on the volumes
-    for volume in 1:numVolumes
+    for volume in volumeIterationRange
         # To achieve the desired temperature range; flip the 
         # range at every iteration
         temperatureIterationRange = flipud(temperatureIterationRange)
@@ -279,15 +325,41 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
             x_vap       = equilibriumCalculation(x_guess, x_total, T)
             x_liq       = x_total - x_vap
 
+            # Checking for trivial solution
+            trivialCheck = x_vap[2:end]./x_total[2:end]
+
+            if round(maximum(trivialCheck),5) == round(minimum(trivialCheck),5)
+                error("Trivial solution found - will not continue.")
+            end
+
+            println("Iteration completed: ("*string(1e3*rangeT[temperature])*"K, "*string(round(rangeV[volume],4))*" m3)")
+            
             # Using this result as the initial guess for the next 
             # iteration
-            x_guess     = x_vap
+            x_guess     = copy(x_vap)
 
             # Unwrapping states
             V_vap       = x_vap[1]
             n_vap       = x_vap[2:end]
             V_liq       = x_liq[1]
             n_liq       = x_liq[2:end]
+
+             # Debugging
+            # println("p_vap: "*string(pressure(T,V_vap,n_vap)))
+            # println("mu_vap: "*string(chemicalPotential(T,V_vap,n_vap)))
+            # println("p_liq: "*string(pressure(T,V_liq,n_liq)))
+            # println("mu_liq: "*string(chemicalPotential(T,V_liq,n_liq)))
+            # println("\nNorm p:"*string(norm(pressure(T,V_vap,n_vap) - pressure(T,V_liq,n_liq))))
+            # println("Norm mu:"*string(norm(chemicalPotential(T,V_vap,n_vap) - chemicalPotential(T,V_liq,n_liq))))
+            # sleep(3)
+
+            # Checking the norm
+            normP       = norm(pressure(T,V_vap,n_vap) - pressure(T,V_liq,n_liq))
+            normMu      = norm(chemicalPotential(T,V_vap,n_vap) - chemicalPotential(T,V_liq,n_liq))
+
+            # If norm is larger than current max; update
+            maxNormP    = normP > maxNormP ? normP : maxNormP
+            maxNormMu   = normMu > maxNormMu ? normMu : maxNormMu
 
             # Calculating the values of the remaining thermodynamic 
             # potentials at current ($T$,$V$) and composition
@@ -303,6 +375,9 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
             H_liq       = enthalpy(T,V_liq,n_liq)
             ansEnthalpy[end-temperature+1, volume]  = H_vap + H_liq
 
+            # Pressure
+            ansPressure[end-temperature+1, volume]  = pressure(T,V_vap,n_vap)
+
             # Storing the variables at current ($T$,$V$) and composition
             ansTemperature[end-temperature+1, volume]           = T
             ansVolumeTotal[end-temperature+1, volume]           = V
@@ -314,13 +389,21 @@ function phaseEquilibrium(x, n_total, rangeT, rangeV)
             ansCompositionLiq[end-temperature+1, volume][:]     = n_liq
 
             # For testing
-            # sleep(1)
+            # println(ansEntropy)
+            # println(ansEntropy)
+            # sleep(0.1)
         end
     end
 
     # Array of matrices containing the results
-    ansArray = {ansTemperature, ansVolumeTotal, ansVolumeVap, ansVolumeLiq, 
+    ansArray = {ansTemperature, ansPressure, ansVolumeTotal, ansVolumeVap, ansVolumeLiq, 
                 ansCompositionVap, ansCompositionLiq, ansEntropy, ansEnthalpy}
+
+    # Maximum norm in p and mu
+    println("\n\n")
+    println("Max norm p: \n"*string(maxNormP))
+    println("Max norm mu: \n"*string(maxNormMu))
+    println("\n\n")
 
     return ansArray
 end

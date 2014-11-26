@@ -19,7 +19,7 @@ workspace()
 # include("readComponentData.jl")
 
 # Defining constants
-include("defineConstants.jl")
+include("defineConstants_SI.jl")
 
 # # Initialization of the parameters
 # n_feed = [1 0 0 0 0]
@@ -90,7 +90,7 @@ println("\n")
 ################################################################################
 # Calculating the hard sphere volume
 V_liq = 1.3*redlichKwong.redlichKwongB(n_liquid)
-V_vap = 7e-4 - V_liq
+V_vap = 8e-4 - V_liq
 
 # Initial guess, vapor phase
 x_guess = [V_vap, n_vapor]
@@ -132,8 +132,8 @@ whos(equilibriumCalculations)
 # println(idealGasEOS(298.15,0.1,n_vapor))
 
 # Iteration vectors for temperature and volume
-rangeT = linspace(0.165,0.180,50)
-rangeV = linspace(3e-4,7e-4,50)
+rangeT = linspace(160,200,50)
+rangeV = linspace(2e-4,8e-4,50)
 
 # Initial guess vector x:
 # 	- x[1]: 		Vapor phase volume 

@@ -17,7 +17,7 @@ export equilibriumCalculation, phaseEquilibrium
 
 # Defining constants and reading component data. Needs to be 
 # included within the module scope
-include("defineConstants.jl")
+include("defineConstants_SI.jl")
 
 # Including numeric Hessian function
 include("numericHessian.jl")
@@ -47,10 +47,10 @@ function equilibriumCalculation(x, x_total, T)
     iterationCount  = 0
 
     # Maximum allowed iteration steps
-    maxIterations   = 1000
+    maxIterations   = 10000
 
     # Convergence tolerance 
-    convergenceTol  = 1e-8
+    convergenceTol  = 1e-6
 
     # Convergence flag; 1 if converged, else 0
     hasConverged    = false
@@ -58,6 +58,10 @@ function equilibriumCalculation(x, x_total, T)
     # Initializing iteration variables
     x_vap           = x
     x_liq           = x_total - x
+
+    # Adjusting the volume guess
+    x_liq[1] = 1.3*redlichKwong.redlichKwongB(x_liq[2:end])
+    x_vap[1] = x_total[1] - x_liq[1]
 
     ############################################################################
     # Checking iteration variables
@@ -81,9 +85,11 @@ function equilibriumCalculation(x, x_total, T)
         n_liq           = x_liq[2:end]
 
         # Checking volume
-        println("Total volume:    "*string(x_total[1]))
-        println("Vapor volume:    "*string(V_vap))
-        println("Liquid volume:   "*string(V_liq))
+        # println("Temperature:     "*string(T))
+        # println("Total volume:    "*string(x_total[1]))
+        # println("Vapor volume:    "*string(V_vap))
+        # println("Liquid volume:   "*string(V_liq))
+        # println("R-K parameter B: "*string(redlichKwong.redlichKwongB(n_liq)))
         # sleep(3)
 
         ########################################################################
@@ -329,10 +335,11 @@ function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
             trivialCheck = x_vap[2:end]./x_total[2:end]
 
             if round(maximum(trivialCheck),5) == round(minimum(trivialCheck),5)
-                error("Trivial solution found - will not continue.")
+                warn("Trivial solution found - will continue.")
+                sleep(3)
             end
 
-            println("Iteration completed: ("*string(1e3*rangeT[temperature])*"K, "*string(round(rangeV[volume],4))*" m3)")
+            println("\nIteration completed: ("*string(1e3*rangeT[temperature])*"K, "*string(round(rangeV[volume],4))*" m3)")
             
             # Using this result as the initial guess for the next 
             # iteration
@@ -345,13 +352,14 @@ function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
             n_liq       = x_liq[2:end]
 
              # Debugging
-            # println("p_vap: "*string(pressure(T,V_vap,n_vap)))
-            # println("mu_vap: "*string(chemicalPotential(T,V_vap,n_vap)))
-            # println("p_liq: "*string(pressure(T,V_liq,n_liq)))
-            # println("mu_liq: "*string(chemicalPotential(T,V_liq,n_liq)))
-            # println("\nNorm p:"*string(norm(pressure(T,V_vap,n_vap) - pressure(T,V_liq,n_liq))))
-            # println("Norm mu:"*string(norm(chemicalPotential(T,V_vap,n_vap) - chemicalPotential(T,V_liq,n_liq))))
-            # sleep(3)
+            println("p_vap: "*string(pressure(T,V_vap,n_vap)))
+            println("mu_vap: "*string(chemicalPotential(T,V_vap,n_vap)))
+            println("p_liq: "*string(pressure(T,V_liq,n_liq)))
+            println("mu_liq: "*string(chemicalPotential(T,V_liq,n_liq)))
+            println("\nNorm p:"*string(norm(pressure(T,V_vap,n_vap) - pressure(T,V_liq,n_liq))))
+            println("Norm mu:"*string(norm(chemicalPotential(T,V_vap,n_vap) - chemicalPotential(T,V_liq,n_liq))))
+            print("\n")
+            # sleep(2)
 
             # Checking the norm
             normP       = norm(pressure(T,V_vap,n_vap) - pressure(T,V_liq,n_liq))

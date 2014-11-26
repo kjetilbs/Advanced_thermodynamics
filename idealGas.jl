@@ -39,7 +39,7 @@ export  idealPressure, idealEntropy, idealChemicalPotential, idealHelmholtz,
 
 # Defining constants and reading component data. Needs to be 
 # included within the module scope
-include("defineConstants.jl")
+include("defineConstants_SI.jl")
 
 ################################################################################
 # Ideal gas EOS
@@ -116,7 +116,7 @@ function Aig_TT(T,V,n)
     # energy of an ideal gas with respect to temperature
     # $\pddc{A\ig}{T}{T}{V,\vt{n}} = -\vtt{n}\left(\frac{\vt{c}_p}{T} - \frac{R}{T}\vt{e}\right)$
     x = c_p/T
-    y = (R/T)*ones(length(n))
+    y = (R/T)*ones(n)
     A_TT = -dot(n,(x-y))
 end
 
@@ -131,7 +131,7 @@ function Aig_Tn(T,V,n)
     # Calculate the second derivative of Helmholtz free energy 
     # of an ideal gas with respect to temperature and mole vector
     # $\pddc{A\ig}{T}{\vt{n}}{V} = - \vt{s}\ig + R$
-    A_TV = -idealEntropy(T,V,n) + R*ones(length(n))
+    A_TV = -idealEntropy(T,V,n) + R*ones(n)
 end
 
 function Aig_VV(T,V,n)
@@ -145,7 +145,7 @@ function Aig_nV(T,V,n)
     # Calculate the second derivative of Helmholtz free energy 
     # of an ideal gas with respect to mole vector and volume
     # $\pddc{A\ig}{\vt{n}}{V}{T} = -\frac{\vt{e} RT}{V}$
-    A_nV = -(ones(length(n)))*((R*T)/V)
+    A_nV = -(ones(n))*((R*T)/V)
 end
 
 function Aig_nn(T,V,n)

@@ -36,7 +36,7 @@ n_feed = n_feed/sum(n_feed)
 # Distribution of components in the two phases; light 
 # components primarily in the gas 
 # n_vap = [0.99; 0.9; 0.5; 0.1; 0.01].*n_feed
-n_vap = [0.5; 0.5; 0.5; 0.5; 0.5].*n_feed
+n_vap = [0.9; 0.8; 0.3; 0.05; 0.05].*n_feed
 
 n_liquid = n_feed - n_vap
 
@@ -163,47 +163,124 @@ println("\n")
 
 # Calculating the relative error
 println("Relative error comparing actual and numeric Hessian")
-println(round(((H_vap-numericH_vap)./H_vap),4))
+println(round(((numericH_vap-H_vap)./numericH_vap),10))
 println("Norm:")
-println(round(norm(((H_vap-numericH_vap)./H_vap)),4))
+println(round(norm((numericH_vap-H_vap)./numericH_vap),10))
+
+println("\n")
+println("Analytic Hessian transposed:")
+println(((H_vap-H_vap')./H_vap))
+println("Norm:")
+println(round(norm((H_vap-H_vap')./H_vap),6))
 
 ################################################################################
-# Investigating Helmholtz free energy
+# Investigating Helmholtz free energy; mole number perturbation
 ################################################################################
-# helmholtzFunction   = helmholtz(T,V_vap,n_vap)
-# helmholtzEuler      = pressure(T,V_vap,n_vap)*V_vap + dot(chemicalPotential(T,V_vap,n_vap),n_vap)
+helmholtzFunction   = redlichKwong.residualHelmholtz(T,V_vap,n_vap)
+# helmholtzEuler      = (pressure(T,V_vap,n_vap)-idealGas.idealPressure(T,V_vap,n_vap))*V_vap + dot(redlichKwong.residualChemicalPotential(T,V_vap,n_vap),n_vap)
 
-# println("\nDifference in Helmholtz:")
+# println("\nDifference in residual Helmholtz:")
 # println(helmholtzFunction-helmholtzEuler) 
 
-# # Initializing
-# numeric_Mu_vap = zeros(n_vap)
+# Initializing
+numeric_Mu_vap = zeros(n_vap)
 
-# for i in 1:length(n_vap)
-#     # Preparing for central difference
-#     forward_n_vap       = deepcopy(n_vap)
-#     backward_n_vap      = deepcopy(n_vap)
+for i in 1:length(n_vap)
+    # Preparing for central difference
+    forward_n_vap       = deepcopy(n_vap)
+    backward_n_vap      = deepcopy(n_vap)
 
-#     forward_n_vap[i]    += 0.5*delta_n_vap
-#     backward_n_vap[i]   -= 0.5*delta_n_vap
+    forward_n_vap[i]   += 0.5*delta_n_vap
+    backward_n_vap[i]  -= 0.5*delta_n_vap
     
-#     forward_A_vap   = pressure(T,V_vap,forward_n_vap)*V_vap + dot(chemicalPotential(T,V_vap,forward_n_vap),forward_n_vap)
-#     backward_A_vap  = pressure(T,V_vap,backward_n_vap)*V_vap + dot(chemicalPotential(T,V_vap,backward_n_vap),backward_n_vap)
+    forward_A_vap       = redlichKwong.residualHelmholtz(T,V_vap,forward_n_vap)
+    backward_A_vap      = redlichKwong.residualHelmholtz(T,V_vap,backward_n_vap)
+    
+    # (pressure(T,V_vap,forward_n_vap) - idealGas.idealPressure(T,V_vap,forward_n_vap))*V_vap + dot(redlichKwong.residualChemicalPotential(T,V_vap,forward_n_vap),forward_n_vap)
 
-#     # Checking mole vectors
-#     println("Before perturbation:   "*string(n_vap))
-#     println("Forward perturbation:  "*string(forward_n_vap))
-#     println("Backward perturbation: "*string(backward_n_vap))
-#     println("\n")
+    # Checking mole vectors
+    println("Before perturbation:   "*string(n_vap))
+    println("Forward perturbation:  "*string(forward_n_vap))
+    println("Backward perturbation: "*string(backward_n_vap))
+    println("\n")
 
-#     # Result of mole number perturbation
-#     numeric_Mu_vap[i]  = centralDifference(forward_A_vap, backward_A_vap, delta_n_vap)
-# end
+    # Result of mole number perturbation
+    numeric_Mu_vap[i]  = centralDifference(forward_A_vap, backward_A_vap, delta_n_vap)
+end
 
-# println("\nDifference in chemical potential:")
-# println("Chemical potential from function:")
-# println(chemicalPotential(T,V_vap,n_vap))
-# println("Chemical potential from Helmholtz perturbation:")
-# println(numeric_Mu_vap)
-# println("Difference:")
-# println(chemicalPotential(T,V_vap,n_vap) - numeric_Mu_vap)
+println("\nDifference in chemical potential:")
+println("Chemical potential from function:")
+println(redlichKwong.residualChemicalPotential(T,V_vap,n_vap))
+println("Ideal gas chemical potential:")
+println(idealGas.idealChemicalPotential(T,V_vap,n_vap))
+println("Chemical potential from Helmholtz perturbation:")
+println(numeric_Mu_vap)
+println("Relative error:")
+println((redlichKwong.residualChemicalPotential(T,V_vap,n_vap) - numeric_Mu_vap)./redlichKwong.residualChemicalPotential(T,V_vap,n_vap))
+println("\n\n")
+
+################################################################################
+# Investigating Helmholtz free energy; temperature perturbation
+################################################################################
+helmholtzFunction   = redlichKwong.residualHelmholtz(T,V_vap,n_vap)
+# helmholtzEuler      = (pressure(T,V_vap,n_vap)-idealGas.idealPressure(T,V_vap,n_vap))*V_vap + dot(redlichKwong.residualChemicalPotential(T,V_vap,n_vap),n_vap)
+
+# println("\nDifference in residual Helmholtz:")
+# println(helmholtzFunction-helmholtzEuler)
+# println("\n")
+
+# Small temperature perturbation
+delta_T_vap         = 1e-8
+
+# Preparing for central difference
+forward_T_vap       = deepcopy(T)
+backward_T_vap      = deepcopy(T)
+
+forward_T_vap      += 0.5*delta_T_vap
+backward_T_vap     -= 0.5*delta_T_vap
+
+forward_A_vap       = redlichKwong.residualHelmholtz(forward_T_vap,V_vap,n_vap)
+# pressure(forward_T_vap,V_vap,n_vap)*V_vap + dot(chemicalPotential(forward_T_vap,V_vap,n_vap),n_vap)
+backward_A_vap      = redlichKwong.residualHelmholtz(backward_T_vap,V_vap,n_vap)
+
+
+# Checking temperature
+println("Before perturbation (T):   "*string(T))
+println("Forward perturbation (T):  "*string(forward_T_vap))
+println("Backward perturbation (T): "*string(backward_T_vap))
+println("\n")
+
+# # Checking pressure
+# println("Before perturbation (p):   "*string(pressure(T,V_vap,n_vap)-idealGas.idealPressure(T,V_vap,n_vap)))
+# println("Forward perturbation (p):  "*string(pressure(forward_T_vap,V_vap,n_vap)-idealGas.idealPressure(forward_T_vap,V_vap,n_vap)))
+# println("Backward perturbation (p): "*string(pressure(backward_T_vap,V_vap,n_vap)-idealGas.idealPressure(backward_T_vap,V_vap,n_vap)))
+# println("\n")
+
+# # Checking chemical potential
+# println("Before perturbation (mu):   "*string(redlichKwong.residualChemicalPotential(T,V_vap,n_vap)))
+# println("Forward perturbation (mu):  "*string(redlichKwong.residualChemicalPotential(forward_T_vap,V_vap,n_vap)))
+# println("Backward perturbation (mu): "*string(redlichKwong.residualChemicalPotential(backward_T_vap,V_vap,n_vap)))
+# println("\n")
+
+# Result of mole number perturbation
+numeric_S_vap   = -centralDifference(forward_A_vap, backward_A_vap, delta_T_vap)
+
+
+println("\nDifference in entropy:")
+println("Entropy from function:")
+println(redlichKwong.residualEntropy(T,V_vap,n_vap))
+println("Entropy from Helmholtz perturbation:")
+println(numeric_S_vap)
+println("Relative error:")
+println((redlichKwong.residualEntropy(T,V_vap,n_vap) - numeric_S_vap)/redlichKwong.residualEntropy(T,V_vap,n_vap))
+
+################################################################################
+# Investigating Helmholtz free energy; difference between function and Euler 
+# formulation
+################################################################################
+helmholtzFunction   = helmholtz(T,V_vap,n_vap)
+helmholtzEuler      = pressure(T,V_vap,n_vap)*V_vap + dot(chemicalPotential(T,V_vap,n_vap),n_vap)
+
+println("\nRelative error in Helmholtz free energy between function and Euler formulation:")
+println((helmholtzFunction-helmholtzEuler)/helmholtzFunction)
+println("\n")

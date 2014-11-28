@@ -36,13 +36,6 @@ function equilibriumCalculation(x, x_total, T)
     # given an initial guess and the constraints (in the
     # form of the total volume and total amount of substance)
 
-    # Residual value; initialized to a large number
-    residual        = 1e10
-
-    # Norm value; initialized to a large number
-    # NB! Don't use norm, as it is a Julia function (!)
-    myNorm          = 1e10
-
     # Iteration counter; initial value
     iterationCount  = 0
 
@@ -116,8 +109,8 @@ function equilibriumCalculation(x, x_total, T)
 
         # Calculating the current Hessian matrix for each phase, using the 
         # numeric routine
-        H_liq           = numericHessian(T,V_vap,n_vap)
-        H_vap           = numericHessian(T,V_liq,n_liq)
+        H_liq           = numericHessian(T,V_vap,n_vap,"rk")
+        H_vap           = numericHessian(T,V_liq,n_liq,"rk")
 
         # Preparing the iteration
         currentGradient = [-p_vap, mu_vap] - [-p_liq, mu_liq]
@@ -339,7 +332,7 @@ function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
                 sleep(3)
             end
 
-            println("\nIteration completed: ("*string(1e3*rangeT[temperature])*"K, "*string(round(rangeV[volume],4))*" m3)")
+            println("\nIteration completed: ("*string(rangeT[temperature])*"K, "*string(round(rangeV[volume],4))*" m3)")
             
             # Using this result as the initial guess for the next 
             # iteration

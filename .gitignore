@@ -7,3 +7,5 @@ plotting/
 *.fdb_latexmk
 *.log
 *.synctex.gz
+*.sublime-project
+*.sublime-workspace

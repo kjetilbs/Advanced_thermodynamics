@@ -89,6 +89,12 @@ function pressure(T,V,n)
     p = (sum(n)*R*T)/(V-B) - (A/(V*(V+B)))
 end
 
+function residualPressure(T,V,n)
+    # Calculate the residual pressure from the Redlich-Kwong EOS and ideal gas:
+    # $p\rrk \eqdef p\rk - p\id$
+    resP = pressure(T,V,n) - idealPressure(T,V,n)
+end
+
 ################################################################################
 # Residual thermodynamic potentials using Redlich-Kwong EOS
 ################################################################################
@@ -304,7 +310,7 @@ function residualA_nn(T,V,n)
     #                 - ((B_n)/(V+B))*(((A_n'*B) - (B_n'*A))/(B^2))
     #                 + (A/B)*((B_n*B_n')/(V+B)^2)
     #             )
-    # println("LOL")
+    # println("LOL@U")
 
     # Defining terms
     term1   = ((R*T)/(V-B))*((ones(n)*B_n') + (B_n*(ones(n)')))
@@ -329,7 +335,17 @@ function residualA_nn(T,V,n)
 
     # println("\n\n")
 
-    resA_nn = term1 + term2 + term3 + term4 
+    # ==========================================================================
+    # New attempt
+    # ==========================================================================
+    # term1   = ((R*T)/(V-B))*((ones(n)*B_n') + (B_n*(ones(n)')))
+    # term2   = sum(n)*R*T*((B_n*B_n')/((V-B)^2))
+    # term3   = ((B^3*A_nn-B^2*((A_n*B_n')+(B_n*A_n'))+2*A*B*(B_n*B_n'))/(B^4))*log(V/(V+B))
+    # term4   = - (B_n/(V+B))*((A_n'*B - B_n'*A)/(B^2))
+    # term5   = (B_n/(V+B))*(A_n'/B)
+    # term6   = - ((A*B_n*B_n')/(B^2))*((V+2*B)/(V+B)^2)
+
+    resA_nn = term1 + term2 + term3 + term4 #+ term5 + term6
 
     # resA_nn =   (
     #                 ((R*T)/(V-B))*((ones(n)*B_n') + (B_n*ones(n)'))

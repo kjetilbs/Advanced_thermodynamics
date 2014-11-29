@@ -92,7 +92,7 @@ println("\n")
 ################################################################################
 # Calculating the hard sphere volume
 V_liq = 1.3*redlichKwong.redlichKwongB(n_liquid)
-V_vap = 9e-4 - V_liq
+V_vap = 8e-4 - V_liq
 
 # Initial guess, vapor phase
 x_guess = [V_vap, n_vapor]
@@ -134,8 +134,8 @@ whos(equilibriumCalculations)
 # println(idealGasEOS(298.15,0.1,n_vapor))
 
 # Iteration vectors for temperature and volume
-rangeT = linspace(160,200,50)
-rangeV = linspace(2.2e-4,1e-3,50)
+rangeT = linspace(170,190,50)
+rangeV = linspace(2e-4,8e-4,50)
 
 # Initial guess vector x:
 # 	- x[1]: 		Vapor phase volume 

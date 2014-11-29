@@ -76,9 +76,12 @@ println("\nAnalytic residual Hessian:")
 analyticResidualHessian    = redlichKwong.residualHessian(T,V_vap,n_vap)
 println(analyticResidualHessian)
 println("\nRelative error:")
-println(round((numericResidualHessian-analyticResidualHessian)./numericResidualHessian,6))
+relResError = (numericResidualHessian-analyticResidualHessian)./numericResidualHessian
+println(round(relResError,6))
 println("\nNorm:")
-println(norm((numericResidualHessian-analyticResidualHessian)./numericResidualHessian))
+println(norm(relResError))
+println("\nSymmetric relative error?")
+println((relResError - relResError')./relResError)
 
 println("\n")
 

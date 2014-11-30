@@ -1,8 +1,8 @@
 ################################################################################
-# Thermodynamic functions using ideal gas
+# Ideal gas module
 #
 # Ideal gas equation of state:
-#   - idealPressure:    pressure from the ideal gas law
+#   - idealPressure:            pressure from the ideal gas law
 #
 # Functions for calculating thermodynamic potentials, 
 # properties and useful derivatives using ideal gas EOS: 
@@ -15,9 +15,6 @@
 #   - Aig_T:    $\pdc{A\ig}{T}{V,\vt{n}} = - S\ig$ 
 #   - Aig_V:    $\pdc{A\ig}{V}{T,\vt{n}} = - p\ig$
 #   - Aig_n:    $\pdc{A\ig}{\vt{n}}{T,V} = \mu\ig$
-#   - Aig_TT:   $\pddc{A\ig}{T}{T}{V,\vt{n}}$ 
-#   - Aig_TV:   $\pddc{A\ig}{T}{V}{\vt{n}}$ 
-#   - Aig_Tn:   $\pddc{A\ig}{T}{\vt{n}}{V}$
 #   - Aig_VV:   $\pddc{A\ig}{V}{V}{T,\vt{n}}$
 #   - Aig_nV:   $\pddc{A\ig}{\vt{n}}{V}{T}$
 #   - Aig_nn:   $\pddc{A\ig}{\vt{n}}{\vt{n}}{T,V}$
@@ -27,19 +24,17 @@
 #   - idealHessian 
 #
 # Author:   Kjetil Sonerud
-# Updated:  2014-11-19 17:08:35
+# Updated:  2014-11-30 17:28:43
 ################################################################################
 
 module idealGas
 
-# Functions to be available in global scope once the module is
-# imported/being used
+# Functions to be available in global scope
 export  idealPressure, idealEntropy, idealChemicalPotential, idealHelmholtz, 
         idealHessian
 
-# Defining constants and reading component data. Needs to be 
-# included within the module scope
-include("defineConstants_SI.jl")
+# Defining constants and reading component data
+include("defineConstants.jl")
 
 ################################################################################
 # Ideal gas EOS
@@ -75,7 +70,7 @@ end
 
 function idealHelmholtz(T,V,n)
     # Calculate the Helmholtz free energy of an ideal gas 
-    # $A(T,V,\vt{n}) = -pV + \sum_{i=1}^n \! \mu_i N_i$
+    # $A(T,V,\vt{n}) = -p\ig V  + \vt{n}\trans \vt{\mu}\ig$
     mu  = idealChemicalPotential(T,V,n)
     p   = idealPressure(T,V,n)
     A   = -p*V + dot(mu,n)
@@ -111,47 +106,24 @@ end
 # Second derivatives of Helmholtz free energy
 ################################################################################
 
-function Aig_TT(T,V,n)
-    # Calculate the second derivative of Helmholtz free 
-    # energy of an ideal gas with respect to temperature
-    # $\pddc{A\ig}{T}{T}{V,\vt{n}} = -\vtt{n}\left(\frac{\vt{c}_p}{T} - \frac{R}{T}\vt{e}\right)$
-    x = c_p/T
-    y = (R/T)*ones(n)
-    A_TT = -dot(n,(x-y))
-end
-
-function Aig_TV(T,V,n)
-    # Calculate the second derivative of Helmholtz free energy 
-    # of an ideal gas with respect to temperature and volume
-    # $\pddc{A\ig}{T}{V}{\vt{n}} = -\frac{\vtt{n} R}{V}$
-    A_TV = -sum(n)*(R/V)
-end
-
-function Aig_Tn(T,V,n)
-    # Calculate the second derivative of Helmholtz free energy 
-    # of an ideal gas with respect to temperature and mole vector
-    # $\pddc{A\ig}{T}{\vt{n}}{V} = - \vt{s}\ig + R$
-    A_TV = -idealEntropy(T,V,n) + R*ones(n)
-end
-
 function Aig_VV(T,V,n)
     # Calculate the second derivative of Helmholtz free energy 
     # of an ideal gas with respect to volume
-    # $\pddc{A\ig}{V}{V}{T,\vt{n}} = \frac{\vtt{n} RT}{V^2}$
+    # $\text{See \cref{eq:dA_ig_dVdV}}$
     A_VV = sum(n)*(R*T/V^2)
 end
 
 function Aig_nV(T,V,n)
     # Calculate the second derivative of Helmholtz free energy 
     # of an ideal gas with respect to mole vector and volume
-    # $\pddc{A\ig}{\vt{n}}{V}{T} = -\frac{\vt{e} RT}{V}$
+    # $\text{See \cref{eq:dA_ig_dndV}}$
     A_nV = -(ones(n))*((R*T)/V)
 end
 
 function Aig_nn(T,V,n)
     # Calculate the second derivative of Helmholtz free energy 
     # of an ideal gas with respect to mole vector
-    # $\pddc{A\ig}{\vt{n}}{\vtt{n}}{T,V} = RT(\mathrm{diag}(\vt{n}))^{-1}$
+    # $\text{See \cref{eq:dA_ig_dndn}}$
     A_nn = R*T*(diagm(1./n))
 end
 

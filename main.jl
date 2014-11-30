@@ -15,24 +15,19 @@
 # Clear all variables
 workspace()
 
+# Timing script
 tic();
 
 # Defining constants
-include("defineConstants_SI.jl")
+include("defineConstants.jl")
 
 # Using ideal gas module
 include("idealGas.jl")
 using idealGas
-println("Contents of ideal gas module:")
-whos(idealGas)
-println("\n")
 
 # Using Redlich-Kwong module
 include("redlichKwong.jl")
 using redlichKwong
-println("Contents of Redlich-Kwong module:")
-whos(redlichKwong)
-println("\n")
 
 ##################################################
 # Initial guess and iteration grid
@@ -75,21 +70,19 @@ x_guess = [V_vap, n_vapor]
 # Using equilibrium module
 include("equilibriumCalculations.jl")
 using equilibriumCalculations
-println("Contents of equilibriumCalculations module:")
-whos(equilibriumCalculations)
 
 ansArray = phaseEquilibrium(x_guess,n_feed,rangeT,rangeV);
 
 ##################################################
 # Extract and plot results
 ##################################################
-cd("results/")
-pwd()
-println("Plotting...")
-sleep(2)
-include("results/results.jl")
-println("Plotting done!")
-cd("..")
+# cd("results/")
+# pwd()
+# println("Plotting...")
+# sleep(2)
+# include("results/results.jl")
+# println("Plotting done!")
+# cd("..")
 
 toc();
 

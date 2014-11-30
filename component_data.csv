@@ -1,5 +1,5 @@
-Component,	Tc,			Pc,				href,			sref,			cp
-[-],		[K],		[Pa],			[J/kmol],		[J/kmol K],		[J/kmol K]
+# [-],		[K],		[Pa],			[J/kmol],		[J/kmol K],		[J/kmol K]
+Component,    $T_c$,    $P_c$,     $h_{\mathrm{ref}}$,  $s_{\mathrm{ref}}$,    $c_p$
 N2,			126.2,		3.40000E+06,	0.0,			1.91609E+05,	29105
 CH4,		190.564,	4.59900E+06,	-7.45200E+07,	1.86270E+05,	33362
 C2H6,		305.32,		4.87200E+06,	-8.38200E+07,	2.29120E+05,	40421

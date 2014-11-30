@@ -40,7 +40,7 @@ tikzpicture = tikzpicture * indent * R"\draw [<->,>=stealth, ultra thick] (9,0) 
 
 # Initializing temperature and volume iteration array
 tempIter    = [5:-1:1]
-volumeIter  = [1:5]
+volumeIter  = [5:-1:1]
 
 iterCounter = 0
 addArrow    = 0.3
@@ -57,7 +57,7 @@ for V in volumeIter
         iterCounter += 1
 
         # Writing grid
-        tikzpicture = tikzpicture * indent * R"\draw [fill=white!50!magenta] ("* string(V*1.5) * "," * string(T) * ") circle [radius=0.1] node at ("* string(V*1.5-0.4) * "," * string(T) * ") {"* string(iterCounter) * "};" * "\n"
+        tikzpicture = tikzpicture * indent * R"\draw [fill=white!50!cyan] ("* string(V*1.5) * "," * string(T) * ") circle [radius=0.1] node at ("* string(V*1.5-0.4) * "," * string(T) * ") {"* string(iterCounter) * "};" * "\n"
     end
     tikzpicture = tikzpicture * indent * R"\draw [->,>=stealth, thick] ("* string(V*1.5-0.8) * "," * string(tempIter[1]+addArrow) * ") -- ("* string(V*1.5-0.8) * "," * string(tempIter[end]-addArrow) * ");" * "\n"
     tikzpicture = tikzpicture * indent * R"\draw [->,>=stealth, thick] ("* string(V*1.5-0.6) * "," * string(tempIter[end]-addArrow) * ") -- ("* string((V+1)*1.5-1) * "," * string(tempIter[end]-addArrow) * ");" * "\n"

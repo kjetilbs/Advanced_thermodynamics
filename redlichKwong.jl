@@ -1,5 +1,5 @@
 ################################################################################
-# Thermodynamic functions using Redlich-Kwong
+# Redlich-Kwong module
 #
 # Redlich-Kwong equation of state:
 #   - redlichKwongA:    Parameter A used in the R-K EOS
@@ -13,6 +13,7 @@
 #   - residualHelmholtz:            Residual Helmholtz free energy
 #   - residualEntropy:              Residual entropy
 #   - residualChemicalPotential:    Residual chemical potential
+#   - residualPressure:             Residual pressure, $p\rrk \eqdef p\rk - p\ig$
 # 
 # Thermodynamic potentials using Redlich-Kwong EOS, found by combining the 
 # residual potential and the ideal gas potential:
@@ -25,9 +26,6 @@
 #   - residualA_V:      $\pdc{A\rrk}{V}{T,\vt{n}} \eqdef - (p\rk - p\ig)$ 
 #
 # Second derivatives of residual Helmholtz free energy:
-#   - residualA_TT:     $\pddc{A\rrk}{T}{T}{V,\vt{n}}$
-#   - residualA_TV:     $\pddc{A\rrk}{T}{V}{V,\vt{n}}$
-#   - residualA_Tn:     $\pddc{A\rrk}{T}{\vt{n}}{V}$
 #   - residualA_VV:     $\pddc{A\rrk}{V}{V}{T,\vt{n}}$
 #   - residualA_nV:     $\pddc{A\rrk}{\vt{n}}{V}{T}$
 #   - residualA_nn:     $\pddc{A\rrk}{\vt{n}}{\vtt{n}}{T,V}$ 
@@ -39,25 +37,20 @@
 #   - hessian:          $\mt{H}\rk$
 #
 # Author:   Kjetil Sonerud
-# Updated:  2014-11-20 11:28:33
+# Updated:  2014-11-30 17:43:44
 ################################################################################
 
 module redlichKwong
 
-# Functions to be available in global scope once the module is
-# imported/being used
+# Functions to be available in global scope 
 export pressure, entropy, enthalpy, chemicalPotential, helmholtz, hessian
 
-# Defining constants and reading component data. Needs to be 
-# included within the module scope
-include("defineConstants_SI.jl")
+# Defining constants and reading component data
+include("defineConstants.jl")
 
 # Using the ideal gas module
 # include("idealGas.jl")
 using idealGas
-# println("Contents of ideal gas module:")
-# whos(idealGas)
-# println("\n")
 
 ################################################################################
 # Redlich-Kwong EOS
@@ -65,7 +58,7 @@ using idealGas
 function redlichKwongA(T,n)
     # Calculate the parameter A for the Redlich-Kwong EOS
     # $A(T,\vt{n}) = \frac{1}{T^{1/2}}\vtt{n}(\vt{a}\:\vtt{a})\vt{n}$
-    # where a is defined in defineConstants.jl as 
+    # where $a_i$ is defined in defineConstants.jl as 
     # $a_i = \frac{1}{9(2^{1/3}-1)}\frac{R^2T_{c,i}^{5/2}}{p_{c,i}} = \Omega_a \frac{R^2T_{c,i}^{5/2}}{p_{c,i}}$
     A = dot(n,((sqrt(a_RK)*sqrt(a_RK)')*n)/sqrt(T))
 end
@@ -73,7 +66,7 @@ end
 function redlichKwongB(n)
     # Calculate the parameter B for the Redlich-Kwong EOS
     # $B(\vt{n}) = \vtt{b}\:\vt{n}$
-    # where b is defined in defineConstants.jl as
+    # where $b_i$ is defined in defineConstants.jl as
     # $b_i = \frac{2^{1/3}-1}{3}\frac{RT_{c,i}}{p_{c,i}} = \Omega_b \frac{RT_{c,i}}{p_{c,i}}$ 
     B = dot(b_RK,n)
 end
@@ -89,19 +82,12 @@ function pressure(T,V,n)
     p = (sum(n)*R*T)/(V-B) - (A/(V*(V+B)))
 end
 
-function residualPressure(T,V,n)
-    # Calculate the residual pressure from the Redlich-Kwong EOS and ideal gas:
-    # $p\rrk \eqdef p\rk - p\ig$
-    resP = pressure(T,V,n) - idealPressure(T,V,n)
-end
-
 ################################################################################
 # Residual thermodynamic potentials using Redlich-Kwong EOS
 ################################################################################
 function residualHelmholtz(T,V,n)
-    # Calculate the residual Helmholtz free energy using the
-    # R-K EOS
-    # $A\rrk(T,V,\vt{n}) = NRT\ln \left(\frac{V}{V-B}\right)+\frac{A}{B}\ln \left(\frac{V}{V+B}\right)$
+    # Calculate the residual Helmholtz free energy using the R-K EOS
+    # $\text{See \cref{eq:Helmholtz_residual_derivation_5}}$
     
     # Calculating $A$ and $B$ parameters
     A = redlichKwongA(T,n)
@@ -112,7 +98,7 @@ end
 
 function residualEntropy(T,V,n)
     # Calculate the residual entropy using the R-K EOS
-    # $S\rrk(T,V,\vt{n}) = -\pdc{A\rrk}{T}{V,\vt{n}} = -NR\ln \left(\frac{V}{V-B}\right)+\frac{A}{2BT}\ln \left(\frac{V}{V+B}\right)$
+    # $\text{See \cref{eq:S_rrk}}$
     
     # Calculating $A$ and $B$ parameters
     A = redlichKwongA(T,n)
@@ -122,12 +108,8 @@ function residualEntropy(T,V,n)
 end
 
 function residualChemicalPotential(T,V,n)
-    # Calculate the residual chemical potential using the 
-    # R-K EOS
-    # $\mu\rrk\tvn = \pdc{A\rrk}{\vt{n}}{\tvni} = \vt{e}RT\ln \left(\frac{V}{V-B}\right) + NRT \left(\frac{B_{\vt{n}}}{V-B}\right) + \left(\frac{\Adn B - \Bdn A}{B^2}\right)\ln \left(\frac{V}{V+B}\right) - \frac{A}{B}\frac{\Bdn}{V+B}$
-    # where
-    # $\Adn &\meqdef \pdc{A}{\vt{n}}{\tvni} = \frac{2}{T^{1/2}}(\vt{a}\:\vtt{a})\vt{n}$
-    # $\Bdn &\meqdef \pdc{B}{\vt{n}}{\tvni} = \vt{b}$
+    # Calculate the residual chemical potential using the R-K EOS
+    # $\text{See \cref{eq:mu_rrk}}$
 
     # Calculating $A$ and $B$ parameters
     A = redlichKwongA(T,n)
@@ -137,7 +119,16 @@ function residualChemicalPotential(T,V,n)
     A_n = 2*((sqrt(a_RK)*sqrt(a_RK)')*n)/sqrt(T)
     B_n = b_RK
 
-    resMu = ones(n)*R*T*log(V/(V-B)) + sum(n)*R*T*(B_n/(V-B)) + ((A_n*B - B_n*A)/(B^2))*log(V/(V+B)) - (A/B)*(B_n/(V+B))
+    resMu =     (
+                    ones(n)*R*T*log(V/(V-B)) + sum(n)*R*T*(B_n/(V-B)) 
+                    + ((A_n*B - B_n*A)/(B^2))*log(V/(V+B)) - (A/B)*(B_n/(V+B))
+                )
+end
+
+function residualPressure(T,V,n)
+    # Calculate the residual pressure from the Redlich-Kwong EOS and ideal gas:
+    # $p\rrk \eqdef p\rk - p\ig$
+    resP = pressure(T,V,n) - idealPressure(T,V,n)
 end
 
 ################################################################################
@@ -173,8 +164,7 @@ end
 # Redlich-Kwong EOS
 ################################################################################
 function residualA_V(T,V,n)
-    # Calculate the first derivative of residual Helmholtz 
-    # free energy with respect to volume
+    # Calculate the first derivative of $A\rrk$ with respect to $V$
     # $\pdc{A\rrk}{V}{T,\vt{n}} \eqdef - (p\rk - p\ig)$
     resA_V = -(pressure(T,V,b) - idealP(T,V,n))
 end
@@ -183,57 +173,9 @@ end
 # Second derivatives of residual Helmholtz free energy using 
 # Redlich-Kwong EOS
 ################################################################################
-function residualA_TT(T,V,n)
-    # Calculate the second derivative of residual Helmholtz 
-    # free energy with respect to temperature
-    # $\pddc{A\rrk}{T}{T}{V,\vt{n}} = \frac{3A}{4BT^2}\ln \left(\frac{V}{V+B}\right)$
-    
-    # Calculating $A$ and $B$ parameters
-    A = redlichKwongA(T,n)
-    B = redlichKwongB(n)
-
-    resA_TT = ((3*A)/(4*B*T^2))*log(V/(V+B))
-end
-
-function residualA_TV(T,V,n)
-    # Calculate the second derivative of residual Helmholtz 
-    # free energy with respect to temperature and volume
-    # $\pddc{A\rrk}{T}{V}{V,\vt{n}} = \frac{A_T}{V(V+B)} -\frac{NRB}{V(V-B)}$
-    
-    # Calculating $A$ and $B$ parameters
-    A = redlichKwongA(T,n)
-    B = redlichKwongB(n)
-
-    # Calculating $A_T$ parameter
-    A_T = -A/2*T
-
-    resA_TV = (A_T)/(V*(V+B)) - (sum(n)*R*B)/(V*(V-B))
-end
-
-function residualA_Tn(T,V,n)
-    # Calculate the second derivative of residual Helmholtz 
-    # free energy with respect to temperature and mole vector
-    # $\pddc{A\rrk}{T}{\vt{n}}{V} = \vt{e}R\ln \left(\frac{V}{V-B}\right) + NR \left(\frac{B_{\vt{n}}}{V-B}\right) + \left(\frac{-\frac{\Adn B}{2T} - \Bdn A_T}{B^2}\right)\ln \left(\frac{V}{V+B}\right) - \frac{A_T}{B}\frac{\Bdn}{V+B}$
-    
-    # Calculating $A$ and $B$ parameters
-    A = redlichKwongA(T,n)
-    B = redlichKwongB(n)
-
-    # Calculating $\Adn$ and $\Bdn$ parameters
-    A_n = 2*((sqrt(a_RK)*sqrt(a_RK)')*n)/sqrt(T)
-    B_n = b_RK
-
-    # Calculating $A_T$ parameter
-    A_T = -A/2*T
-
-    resA_Tn =   ones(length(n))*R*log(V/(V-B)) + sum(n)*R*(B_n/(V-B))+((-((A_n*B)/2*T) 
-                - B_n*A_T)/(B^2))*log(V/(V+B))-((A_T*B_n)/(B*(V+B)))
-end
-
 function residualA_VV(T,V,n)
-    # Calculate the second derivative of residual Helmholtz 
-    # free energy with respect to volume
-    # $\pddc{A\rrk}{V}{V}{T,\vt{n}} = NRT \left[-\frac{1}{V^2} + \frac{1}{(V-B)^2}\right]+\frac{A}{B}\left[-\frac{1}{V^2} + \frac{1}{(V+B)^2}\right]$
+    # Calculate the second derivative of $A\rrk$ with respect to $V$
+    # $\text{See \cref{eq:dA_rrk_dVdV}}$
     
     # Calculating $A$ and $B$ parameters
     A = redlichKwongA(T,n)
@@ -243,9 +185,8 @@ function residualA_VV(T,V,n)
 end
 
 function residualA_nV(T,V,n)
-    # Calculate the second derivative of residual Helmholtz 
-    # free energy with respect to mole vector and volume
-    # $\pddc{A\rrk}{\vt{n}}{V}{T} = \frac{\vt{e}RT}{V} - \frac{\vt{e}RT(V-B) + \Bdn NRT}{(V-B)^2} + \frac{(\Adn BV + B^2\Adn - AB\Bdn)}{BV(V+B)^2}$
+    # Calculate the second derivative of $A\rrk$ with respect to $\vt{n}$ and $V$
+    # $\text{See \cref{eq:dA_rrk_dndV}}$
     
     # Calculating $A$ and $B$ parameters
     A = redlichKwongA(T,n)
@@ -255,21 +196,14 @@ function residualA_nV(T,V,n)
     A_n = 2*((sqrt(a_RK)*sqrt(a_RK)')*n)/sqrt(T)
     B_n = b_RK
 
-    # Calculating $A_T$ parameter
-    A_T = -A/2*T
-
     resA_nV =   (
                     ones(length(n))*((R*T)/V) - ((ones(length(n))*R*T*(V-B) + B_n*sum(n)*R*T)/(V-B)^2)
                     + (A_n*B*V + B^2*A_n - A*B*B_n)/(B*V*(V+B)^2)
                 )
-    # + ((A_n*B*V - A*B_n*V)/(B^2*V^2)) - ((A_n*B*(V+B) - A*(V*B_n+2*B*B_n))/(B^2*(V+B)^2))
 end
 
 function residualA_nn(T,V,n)
-    # Calculate the second derivative of residual Helmholtz 
-    # free energy with respect to mole vector 
-    # $\pddc{A\rrk}{\vt{n}}{\vtt{n}}{T,V} = \frac{RT}{(V-B)}(\vt{e}\Bdn\trans + \Bdn\vtt{n}) + NRT\left(\frac{\Bdn\Bdn\trans}{(V-B)^2}\right) \nonumber \left(\frac{\:\Adnn B^3 - (\Adn\Bdn\trans + \Bdn\Adn\trans)B^2 + 2B\Bdn\Bdn\trans A}{B^4}\right)\ln \left(\frac{V}{V+B}\right)$
-    #       $\left(\frac{(\Adn B - \Bdn A)}{B^2}\right)\left(\frac{\Bdn\trans}{(V+B)}\right) - \left(\frac{\Bdn}{(V+B)}\right)\left(\frac{(\Adn\trans B - \Bdn\trans A)}{B^2}\right) \left(\frac{A}{B}\right)\left(\frac{\Bdn\Bdn\trans}{(V+B)^2}\right)$
+    # Calculate the second derivative of $A\rrk$ with respect $\vt{n}$ 
     # $\text{See \cref{eq:dA_rrk_dnn}}$
 
     # Calculating $A$ and $B$ parameters
@@ -283,116 +217,21 @@ function residualA_nn(T,V,n)
     # Calculating $\Adnn$ parameter
     A_nn = 2*((sqrt(a_RK)*sqrt(a_RK)'))/sqrt(T)
 
-    # ==========================================================================
-    # Attempt with for-loops
-    # ========================================================================== 
-    # resA_nn = zeros(n*n')
-
-    # for i = 1:length(n)
-    #     for j = 1:length(n)
-    #         resA_nn[i,j] =   (
-    #                             (R*T*(b_RK[i]+b_RK[j]))/(V-B) + (sum(n)*R*T*b_RK[i]*b_RK[j])/(V-B)^2
-    #                             + (2*sqrt(a_RK[i]/sqrt(T)*a_RK[j]/sqrt(T))/B
-    #                             - (b_RK[j]*2*sqrt(a_RK[i]*A/sqrt(T))
-    #                             + b_RK[i]*2*sqrt(a_RK[j]*A/sqrt(T)))/B^2 
-    #                             + 2*A*b_RK[i]*b_RK[j]/B^3)*log(V/(V-B))
-    #                             - (2*sqrt(a_RK[i]*A/sqrt(T))*b_RK[j]
-    #                             + 2*sqrt(a_RK[j]*A/sqrt(T))*b_RK[i])/(B*(V+B))
-    #                             + (2*A*b_RK[i]*b_RK[j]*V)/(B^2*(V+B)^2)
-    #                             + (3*A*b_RK[i]*b_RK[j])/(B*(V+B)^2)
-    #                         )
-    #     end
-    # end
-    # ==========================================================================
-
-    # ==========================================================================
-    # Old attempt
-    # ==========================================================================
-    # resA_nn =   (
-    #                 ((R*T)/(V-B))*(ones(length(n))*B_n') + (B_n*ones(length(n))') 
-    #                 + sum(n)*R*T*((B_n*B_n')/((V-B)^2))
-    #                 + ((A_nn*B^3-((A_n*B_n')+(B_n*A_n'))*B^2+2*B*(B_n*B_n')*A)/(B^4))*log(V/(V+B))
-    #                 - ((A_n*B - B_n*A)/(B^2))*((B_n')/(V+B)) 
-    #                 - ((B_n)/(V+B))*(((A_n'*B) - (B_n'*A))/(B^2))
-    #                 + (A/B)*((B_n*B_n')/(V+B)^2)
-    #             )
-    # ==========================================================================
-
-    # ==========================================================================
-    # Current attempt
-    # ==========================================================================
+    # Temporary variables for the terms
     term1   = ((R*T)/(V-B))*((ones(n)*B_n') + (B_n*(ones(n)')))
-    # println("Term 1:")
-    # println(norm((term1-term1')./term1))
 
     term2   = sum(n)*R*T*((B_n*B_n')/((V-B)^2))
-    # println("Term 2:")
-    # println(norm((term2-term2')./term2))
 
     term3   = ((B^3*A_nn-B^2*((A_n*B_n')+(B_n*A_n'))+2*A*B*(B_n*B_n'))/(B^4))*log(V/(V+B))
-    # println("Term 3:")
-    # println(norm((term3-term3')./term3))
 
     term4_1 = 2*A*V*(B_n*B_n')-V*B*((A_n*B_n')+(B_n*A_n'))+3*A*B*(B_n*B_n')
     
     term4_2 = - B^2*((A_n*B_n')+(B_n*A_n'))
     
     term4   = (term4_1 + term4_2)/(B^2*(V+B)^2)
-    # println("Term 4:")
-    # println(norm((term4-term4')./term4))
 
-    # println("\n\n")
-
+    # Result; summation of temporary terms
     resA_nn = term1 + term2 + term3 + term4
-    # ==========================================================================
-
-    # ==========================================================================
-    # New attempt
-    # ==========================================================================
-    # term1   = ((R*T)/(V-B))*((ones(n)*B_n') + (B_n*(ones(n)')))
-    # println("Term 1:")
-    # println(norm((term1-term1')./term1))
-
-    # term2   = sum(n)*R*T*((B_n*B_n')/((V-B)^2))
-    # println("Term 2:")
-    # println(norm((term2-term2')./term2))
-
-    # term3   = ((B^3*A_nn-B^2*((A_n*B_n')+(B_n*A_n'))+2*A*B*(B_n*B_n'))/(B^4))*log(V/(V+B))
-    # println("Term 3:")
-    # println(norm((term3-term3')./term3))
-
-    # term4   = - (B_n/(V+B))*((A_n'*B - B_n'*A)/(B^2))
-    # println("Term 4:")
-    # println(norm((term4-term4')./term4))
-
-    # term5   = (B_n/(V+B))*(A_n'/B)
-    # println("Term 5:")
-    # println(norm((term5-term5')./term5))
-
-    # println("Term 4+5:")
-    # println(norm(((term4+term5)-(term4+term5)')./(term4+term5)))
-
-    # term6   = - ((A*B_n*B_n')/(B^2))*((V+2*B)/(V+B)^2)
-    # println("Term 6:")
-    # println(norm((term6-term6')./term6))
-
-    # println("\n\n")
-
-    # resA_nn = term1 + term2 + term3 + term4 + term5 + term6
-    # ==========================================================================
-    
-    # ==========================================================================
-    # Another old attempt
-    # ==========================================================================
-    # resA_nn =   (
-    #                 ((R*T)/(V-B))*((ones(n)*B_n') + (B_n*ones(n)'))
-    #               + sum(n)*R*T*((B_n*B_n')/((V-B)^2))
-    #               + ((B^2*A_nn - B*((A_n*B_n')+(B_n*A_n')) + 2*A*B*(B_n*B_n'))/(B^3))
-    #               * log(V/(V+B))
-    #               + (2*A*V*(B_n*B_n')-V*B*((A_n*B_n')+(B_n*A_n'))+A*B*(B_n*B_n')
-    #               - B^2*((A_n*B_n')+(B_n*A_n')))/(B^2*(V+B)^2)
-    #             )
-    # ==========================================================================
 end
 
 ################################################################################

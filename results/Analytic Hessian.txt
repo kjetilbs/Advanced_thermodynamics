@@ -1,0 +1,33 @@
+Analytic Hessian:
+
+Max norm p: 
+0.00013613305054605007
+Max norm mu: 
+2.0180988269233595e-8
+
+elapsed time: 11.352359577 seconds
+
+Numeric Hessian:
+
+Max norm p: 
+0.0001526817213743925
+Max norm mu: 
+2.2960897967887343e-8
+
+elapsed time: 28.35336584 seconds
+
+Changed units to MPa: 
+
+Tol: 1e-9
+
+Max norm p: 
+3.0547542273495765e-10
+Max norm mu: 
+9.78879983236672e-11
+
+Tol: 1e-10
+
+Max norm p: 
+2.1980861575343624e-10
+Max norm mu: 
+9.317772109982395e-11

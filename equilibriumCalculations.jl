@@ -30,7 +30,7 @@ using redlichKwong
 # Equilibrium calculation (N-R-loop)
 ################################################################################
 
-function equilibriumCalculation(x, x_total, T)
+function equilibriumCalculation(x, x_total, T, iterMemory)
     # Calculate the equilibrium state for a multiphase 
     # equilibrium problem with constant temperature $T$
     # given an initial guess and the constraints (in the
@@ -43,7 +43,7 @@ function equilibriumCalculation(x, x_total, T)
     maxIterations   = 10000
 
     # Convergence tolerance 
-    convergenceTol  = 1e-6
+    convergenceTol  = [5e-8, 1e-10]
 
     # Convergence flag; 1 if converged, else 0
     hasConverged    = false
@@ -104,13 +104,13 @@ function equilibriumCalculation(x, x_total, T)
         mu_liq          = chemicalPotential(T,V_liq,n_liq)
 
         # Calculating the current Hessian matrix for each phase
-        # H_liq           = hessian(T,V_vap,n_vap)
-        # H_vap           = hessian(T,V_liq,n_liq)
+        H_liq           = hessian(T,V_vap,n_vap)
+        H_vap           = hessian(T,V_liq,n_liq)
 
         # Calculating the current Hessian matrix for each phase, using the 
         # numeric routine
-        H_liq           = numericHessian(T,V_vap,n_vap,"rk")
-        H_vap           = numericHessian(T,V_liq,n_liq,"rk")
+        # H_liq           = numericHessian(T,V_vap,n_vap,"rk")
+        # H_vap           = numericHessian(T,V_liq,n_liq,"rk")
 
         # Preparing the iteration
         currentGradient = [-p_vap, mu_vap] - [-p_liq, mu_liq]
@@ -224,7 +224,7 @@ function equilibriumCalculation(x, x_total, T)
 
         # Has converged? (i.e. sufficiently small change)
         # if maximum(abs(deltaX)) < convergenceTol
-        if norm(currentGradient) < convergenceTol
+        if norm(currentGradient[1]) < convergenceTol[1] && norm(currentGradient[2:end]) < convergenceTol[2]
             hasConverged = true
         end
 
@@ -242,6 +242,15 @@ function equilibriumCalculation(x, x_total, T)
 
     # Check if the solution has converged
     if hasConverged == true
+        # Update the total number of iterations
+        iterMemory[2]   += iterationCount
+
+        # Update the number of iterations for this coordinate
+        iterMemory[3]   = iterationCount
+
+        # Check the maximum number of iterations
+        iterMemory[1]   = iterationCount > iterMemory[1] ? iterationCount : iterMemory[1]
+
         # Equilibrium composition, vapor phase
         return x_vap
     else
@@ -276,13 +285,19 @@ function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
     ansCompositionLiq   = [zeros(length(n_total)) for x = 1:numVolumes, y = 1:numTemperatures]
     ansEntropy          = zeros(numVolumes, numTemperatures)
     ansEnthalpy         = zeros(numVolumes, numTemperatures)
+    ansIterations       = zeros(numVolumes, numTemperatures)
     
     # println(ansTemperature)
     # println(ansCompositionLiq)
 
-    # Debugging; storing the maximum error in p and mu
-    maxNormP    = 0
-    maxNormMu   = 0
+    # Debugging; storing the maximum error in p and mu, and maximum number of iterations
+    maxNormP            = 0
+    maxNormMu           = 0
+    maxNumIter          = 0
+    totNumIter          = 0
+    thisNumIter         = 0
+
+    iterMemory          = [maxNumIter, totNumIter, thisNumIter]
 
     # Not needed?
     # ansPressure       = zeros(numVolumes, numTemperatures)
@@ -321,7 +336,7 @@ function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
             # println("x_total: "*string(x_total))
             # println("T: "*string(T))
 
-            x_vap       = equilibriumCalculation(x_guess, x_total, T)
+            x_vap       = equilibriumCalculation(x_guess, x_total, T, iterMemory)
             x_liq       = x_total - x_vap
 
             # Checking for trivial solution
@@ -345,13 +360,13 @@ function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
             n_liq       = x_liq[2:end]
 
              # Debugging
-            println("p_vap: "*string(pressure(T,V_vap,n_vap)))
-            println("mu_vap: "*string(chemicalPotential(T,V_vap,n_vap)))
-            println("p_liq: "*string(pressure(T,V_liq,n_liq)))
-            println("mu_liq: "*string(chemicalPotential(T,V_liq,n_liq)))
-            println("\nNorm p:"*string(norm(pressure(T,V_vap,n_vap) - pressure(T,V_liq,n_liq))))
-            println("Norm mu:"*string(norm(chemicalPotential(T,V_vap,n_vap) - chemicalPotential(T,V_liq,n_liq))))
-            print("\n")
+            # println("p_vap: "*string(pressure(T,V_vap,n_vap)))
+            # println("mu_vap: "*string(chemicalPotential(T,V_vap,n_vap)))
+            # println("p_liq: "*string(pressure(T,V_liq,n_liq)))
+            # println("mu_liq: "*string(chemicalPotential(T,V_liq,n_liq)))
+            # println("\nNorm p:"*string(norm(pressure(T,V_vap,n_vap) - pressure(T,V_liq,n_liq))))
+            # println("Norm mu:"*string(norm(chemicalPotential(T,V_vap,n_vap) - chemicalPotential(T,V_liq,n_liq))))
+            # print("\n")
             # sleep(2)
 
             # Checking the norm
@@ -388,6 +403,7 @@ function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
             # println("Type ans array: "*string(typeof(ansCompositionVap[end-temperature+1, volume])))
             ansCompositionVap[end-temperature+1, volume][:]     = n_vap
             ansCompositionLiq[end-temperature+1, volume][:]     = n_liq
+            ansIterations[end-temperature+1, volume]            = iterMemory[3]
 
             # For testing
             # println(ansEntropy)
@@ -398,13 +414,28 @@ function phaseEquilibrium(x_guess, n_total, rangeT, rangeV)
 
     # Array of matrices containing the results
     ansArray = {ansTemperature, ansPressure, ansVolumeTotal, ansVolumeVap, ansVolumeLiq, 
-                ansCompositionVap, ansCompositionLiq, ansEntropy, ansEnthalpy}
+                ansCompositionVap, ansCompositionLiq, ansEntropy, ansEnthalpy, ansIterations}
 
     # Maximum norm in p and mu
     println("\n\n")
     println("Max norm p: \n"*string(maxNormP))
     println("Max norm mu: \n"*string(maxNormMu))
+    println("Max number of iterations: \n"*string(iterMemory[1]))
+    println("Total number of iterations: \n"*string(iterMemory[2]))
+    println("Mean number of iterations: \n"*string(iterMemory[2]/(numVolumes*numTemperatures)))
     println("\n\n")
+
+    # Opening log file
+    fh_log   = open("results/log_"*string(strftime("%c", time()))*".txt", "w")
+    # Writing data to log file
+    write(fh_log, "Max norm p: " *string(maxNormP)*"\n")
+    write(fh_log, "Max norm mu: " *string(maxNormMu)*"\n")
+    write(fh_log, "Max number of iterations: " *string(iterMemory[1])*"\n")
+    write(fh_log, "Total number of iterations: " *string(iterMemory[2])*"\n")
+    write(fh_log, "Mean number of iterations: " *string(iterMemory[2]/(numVolumes*numTemperatures))*"\n")
+
+    # Close files
+    close(fh_log)
 
     return ansArray
 end

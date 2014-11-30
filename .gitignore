@@ -1,6 +1,6 @@
 # Folders not to be included
 sandbox/
-plotting/
+# plotting/
 
 # .tex-related files not to be included
 *.aux

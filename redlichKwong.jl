@@ -333,7 +333,7 @@ function residualA_nn(T,V,n)
     # println("Term 3:")
     # println(norm((term3-term3')./term3))
 
-    term4_1 = 2*A*V*(B_n*B_n')-V*B*((A_n*B_n')+(B_n*A_n'))+A*B*(B_n*B_n')
+    term4_1 = 2*A*V*(B_n*B_n')-V*B*((A_n*B_n')+(B_n*A_n'))+3*A*B*(B_n*B_n')
     
     term4_2 = - B^2*((A_n*B_n')+(B_n*A_n'))
     
@@ -350,12 +350,33 @@ function residualA_nn(T,V,n)
     # New attempt
     # ==========================================================================
     # term1   = ((R*T)/(V-B))*((ones(n)*B_n') + (B_n*(ones(n)')))
-    # term2   = sum(n)*R*T*((B_n*B_n')/((V-B)^2))
-    # term3   = ((B^3*A_nn-B^2*((A_n*B_n')+(B_n*A_n'))+2*A*B*(B_n*B_n'))/(B^4))*log(V/(V+B))
-    # term4   = - (B_n/(V+B))*((A_n'*B - B_n'*A)/(B^2))
-    # term5   = (B_n/(V+B))*(A_n'/B)
-    # term6   = - ((A*B_n*B_n')/(B^2))*((V+2*B)/(V+B)^2)
+    # println("Term 1:")
+    # println(norm((term1-term1')./term1))
 
+    # term2   = sum(n)*R*T*((B_n*B_n')/((V-B)^2))
+    # println("Term 2:")
+    # println(norm((term2-term2')./term2))
+
+    # term3   = ((B^3*A_nn-B^2*((A_n*B_n')+(B_n*A_n'))+2*A*B*(B_n*B_n'))/(B^4))*log(V/(V+B))
+    # println("Term 3:")
+    # println(norm((term3-term3')./term3))
+
+    # term4   = - (B_n/(V+B))*((A_n'*B - B_n'*A)/(B^2))
+    # println("Term 4:")
+    # println(norm((term4-term4')./term4))
+
+    # term5   = (B_n/(V+B))*(A_n'/B)
+    # println("Term 5:")
+    # println(norm((term5-term5')./term5))
+
+    # println("Term 4+5:")
+    # println(norm(((term4+term5)-(term4+term5)')./(term4+term5)))
+
+    # term6   = - ((A*B_n*B_n')/(B^2))*((V+2*B)/(V+B)^2)
+    # println("Term 6:")
+    # println(norm((term6-term6')./term6))
+
+    # println("\n\n")
 
     # resA_nn = term1 + term2 + term3 + term4 + term5 + term6
     # ==========================================================================

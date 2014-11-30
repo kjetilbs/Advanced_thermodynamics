@@ -1,0 +1,5 @@
+Max norm p: 0.0002005810383707285
+Max norm mu: 2.991900754865952e-8
+Max number of iterations: 15
+Total number of iterations: 17827
+Mean number of iterations: 7.1308

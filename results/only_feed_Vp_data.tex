@@ -1,0 +1,56 @@
+\documentclass[tikz,border=5mm]{standalone}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepgfplotslibrary{patchplots}
+\usepackage{pgfplotstable}
+
+% \pgfplotsset{compat=1.3}
+
+% \usepgfplotslibrary{external} 
+% \tikzexternalize
+
+\pgfplotsset{compat=newest}
+\usepgfplotslibrary{colormaps}
+\usepackage{xcolor}
+
+% For generating .pdf
+% \usetikzlibrary{external}
+% \tikzexternalize
+
+% To generate .ps; should not be needed
+% \tikzset{external/system call={latex \tikzexternalcheckshellescape -halt-on-error
+% -interaction=batchmode -jobname "\image" "\texsource";
+% dvips -o "\image".ps "\image".dvi}}
+
+% Forcing remake of the .pdfs; otherwise, LaTeX will assume that nothing has changed
+% \tikzset{external/force remake}
+
+\begin{document}
+\thispagestyle{empty}
+
+% Feed composition 
+\begin{tikzpicture}
+    \begin{semilogxaxis}[
+        title={$(V_{\mathrm{m}},p)$-plot},
+        ylabel={$p$ [Pa]},
+        xlabel={$V_{\mathrm{m}}$ [$\mathrm{m}^3$]},
+        % legend entries={$(V_{m},p)$-isotherms},
+        grid = major,
+        % scaled y ticks = true,
+        % ymin=0,
+        ymax=1.5e7,
+        % xmin=5e-4,
+        xmax=1e-2,
+        restrict y to domain=-1e7:7e7,
+        % restrict x to domain=5e-4:5e-3,
+        %domain=-10:10
+        % cycle list name=color
+        ]
+        \addplot[smooth, color=black] file {/Users/kjetilbs/Documents/Git/Advanced_thermodynamics/results/tot_Vp_data.dat};
+        \label{isotherms}
+        \node [draw,fill=white, anchor=north east] at (rel axis cs:0.97,0.97) {\ref{isotherms} $(V_{\mathrm{m}},p)$-isotherms};
+    \end{semilogxaxis}
+\end{tikzpicture}
+
+\end{document}

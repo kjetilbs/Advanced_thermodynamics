@@ -1,8 +1,11 @@
 # Folders not to be included
 sandbox/
+# plotting/
 
 # .tex-related files not to be included
 *.aux
 *.fdb_latexmk
 *.log
 *.synctex.gz
+*.sublime-project
+*.sublime-workspace

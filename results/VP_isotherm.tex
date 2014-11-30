@@ -1,0 +1,59 @@
+\documentclass[tikz,border=5mm]{standalone}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepgfplotslibrary{patchplots}
+\usepackage{pgfplotstable}
+
+% \pgfplotsset{compat=1.3}
+
+% \usepgfplotslibrary{external} 
+% \tikzexternalize
+
+\pgfplotsset{compat=newest}
+\usepgfplotslibrary{colormaps}
+\usepackage{xcolor}
+\usepackage{siunitx}
+
+% For generating .pdf
+% \usetikzlibrary{external}
+% \tikzexternalize
+
+% To generate .ps; should not be needed
+% \tikzset{external/system call={latex \tikzexternalcheckshellescape -halt-on-error
+% -interaction=batchmode -jobname "\image" "\texsource";
+% dvips -o "\image".ps "\image".dvi}}
+
+% Forcing remake of the .pdfs; otherwise, LaTeX will assume that nothing has changed
+% \tikzset{external/force remake}
+
+\begin{document}
+\thispagestyle{empty}
+
+% Feed composition 
+\begin{tikzpicture}
+    \begin{semilogxaxis}[
+        title={$(V,P)$-plot},
+        xlabel={Volume [\SI{}{\cubic\meter}]},
+        ylabel={Pressure [\SI{}{\pascal}]},
+        % legend entries={$(V_{m},p)$-isotherms},
+        grid = major,
+        % scaled y ticks = true,
+        % ymin=0,
+        % ymax=1.5e7,
+        % xmin=1e-4,
+        % xmax=2e-3,
+        % restrict y to domain=-1e7:7e7,
+        % restrict x to domain=2.5e-4:8e-4,
+        %domain=-10:10
+        % cycle list name=color
+        ]
+        % \addplot[smooth, color=blue] file {mollier_isochor.dat};
+        \addplot[smooth, color=cyan] file {/Users/kjetilbs/Documents/Git/Advanced_thermodynamics/results/VP_isotherm.dat};
+        \label{isotherms}
+        % \draw[->, thick, >=stealth] (axis cs:6.5e-5,-0.5e7) -- (axis cs:1.2e-4,1e7,) node[anchor=north west] {Increasing temperature};
+        \node [draw,fill=white, anchor=north] at (rel axis cs:0.5,0.97) {\ref{isotherms} $(V,p)$-isotherms};
+    \end{semilogxaxis}
+\end{tikzpicture}
+
+\end{document}

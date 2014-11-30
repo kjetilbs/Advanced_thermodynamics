@@ -45,4 +45,7 @@ bubblePointV_m		= (1./bubblePointRho)*Mm_avg 				# [m3/mol]
 writedlm("dewPoints_VT.dat",[dewPointV_m dewPointT], ' ')
 writedlm("bubblePoints_VT.dat",[bubblePointV_m bubblePointT], ' ')
 
+writedlm("dewPoints_VP.dat",[dewPointV_m dewPointP], ' ')
+writedlm("bubblePoints_VP.dat",[bubblePointV_m bubblePointP], ' ')
+
 
